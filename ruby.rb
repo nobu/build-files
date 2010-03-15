@@ -34,7 +34,7 @@ end
 
 srcdir ||= File.dirname(__FILE__)
 rbconf = "rbconfig.rb"
-arch = ENV["ARCH"]
+arch = ENV["ARCH"] || RUBY_PLATFORM.sub(/^universal\./, '')
 i386 = ("i3#{$1}" if /^i[4-9](86-.*)/ =~ arch)
 universal = ("universal-darwin" if /darwin/ =~ arch)
 if archdir
