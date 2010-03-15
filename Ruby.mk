@@ -219,7 +219,7 @@ $(1)/%: .PHONY prereq
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
-phony-filter =  up UP tags TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: common.mk | sed s/:$$//)
+phony-filter =  help up UP tags TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: common.mk | sed s/:$$//)
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
@@ -296,6 +296,9 @@ revision.h:
 	touch .revision.time
 #	@! fgrep revision.h version.h > /dev/null || $(BASERUBY) tool/revup.rb
 endif
+
+help:
+	@$(MAKE) -f common.mk $@
 
 up: .do-up revision.h
 
