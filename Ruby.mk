@@ -182,11 +182,11 @@ subdir-goals := $(filter $(subdirs:=/%),$(goals))
 all:
 
 debug:
-	$(MAKE) optflags=-O0
+	+$(MAKE) optflags=-O0
 
 $(MINIRUBY): $(PREREQ) $(dir $(MINIRUBY))Makefile .pre-host-miniruby
 	@$(call SETTITLE,making $(@F) in $(@D))
-	$(submake) $(if $(TOPMAKE),,TOPMAKE=$(MAKE)) $(@F)
+	+$(submake) $(if $(TOPMAKE),,TOPMAKE=$(MAKE)) $(@F)
 	$(call FINISHED,host-miniruby)
 
 #$(filter-out $(MINIRUBY),$(subdir-goals)): prereq
@@ -215,7 +215,7 @@ $(1)/config.status:
 
 $(1)/%: .PHONY prereq
 	@$$(SETTITLE) making $$(@F) in $$(@D)
-	$$(submake) TOPMAKE=$(value TOPMAKE) $$(mflags) $$(@F)
+	+$$(submake) TOPMAKE=$(value TOPMAKE) $$(mflags) $$(@F)
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
@@ -245,7 +245,7 @@ config: .pre-config $(subdirs:=/config.status) .post-config
 rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
 %.c: %.y
-	{ sed '/^@/d' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
+	+{ sed '/^@/d' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
 	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" $@
 	$(CMDFINISHED)
 
