@@ -15,21 +15,45 @@ or = $(if $(1),$(1),$(2))
 
 CVS = cvs -f
 SVN = svn
-GIT_SVN = git svn
+GIT = git
+GIT_SVN = $(GIT) svn
 svn-up = update
 svn-up-options = --accept postpone
 GITSVN = git svn
 ifneq ($(wildcard .svn/entries),)
+UPDATE_REVISION = $(VCS) info $(@D) | \
+	sed -n \
+	-e 's,^URL:.*/branches/\([^/]*\)$$,\#define RUBY_BRANCH_NAME "\1",p' \
+	-e 's/.*Rev:/\#define RUBY_REVISION/p'
+
 VCS = $(SVN)
-SRCS := $(call svn_srcs,*.[chy]) $(call svn_srcs,include/ruby/) \
+SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,*.ci) $(call svn_srcs,insns.def) \
-        $(call svn_srcs,enc/) $(call svn_srcs,missing/) $(call svn_srcs,win32/)
+	$(call svn_srcs,*.def) $(call svn_srcs,missing/) \
+	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
-else ifneq ($(wildcard .git/svn),)
+else ifneq ($(wildcard .git),)
+UPDATE_REVISION = $(VCS) log -n 1 $(@D) | \
+	sed -e '$$!d' \
+	-e 's, *git-svn-id: .*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
+	-e 's, *git-svn-id: .*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
+
+SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[chy])\
+	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
+	$(call git_srcs,*.def) $(call git_srcs,missing/) \
+        $(call git_srcs,enc/) $(call git_srcs,win32/)
+SRCS := $(wildcard $(SRCS))
+  ifneq ($(wildcard .git/svn),)
 VCS = $(GIT_SVN)
-SRCS := $(call git_svn_srcs,*.[chy] *.def)
-SRCS := $(wildcard $(SRCS))
 VCSUP = $(VCS) rebase $(gitsvnup-options)
+#  else ifeq ($(patsubst +%,+,$(shell git config remote.origin.fetch)),+)
+#GIT_ORIGIN = $(shell git config remote.origin.url)
+#VCS = $(GIT)
+#VCSUP = $(MAKE) -C "$(GIT_ORIGIN)" gitup-options=$(gitup-options) up
+  else
+VCS = $(GIT)
+VCSUP = $(VCS) pull
+  endif
 else ifneq ($(wildcard CVS/Entries),)
 VCS = $(CVS)
 SRCS := $(call cvs_srcs) $(call cvs_srcs,missing/) $(call cvs_srcs,win32/)
@@ -263,11 +287,8 @@ revision.h: .PHONY
 
 ifeq ($(filter revision.h,$(prereq-targets)),)
 revision.h:
-	@LC_MESSAGES=C $(VCS) info $(@D) | \
-	sed -n \
-	-e 's,^URL:.*/branches/\([^/]*\)$$,#define RUBY_BRANCH_NAME "\1",p' \
-	-e "s/.*Rev:/#define RUBY_REVISION/p" > "$@.tmp"
-	@if test -f "$@" -a -s "$@.tmp" && cmp "$@" "$@.tmp" > /dev/null 2>&1; then \
+	@LC_MESSAGES=C $(UPDATE_REVISION) > "$@.tmp"
+	@if test -f "$@" -a -s "$@.tmp" && diff -u "$@" "$@.tmp" > /dev/null 2>&1; then \
 	    rm -f "$@.tmp"; \
 	else \
 	    mv -f "$@.tmp" "$@"; \
