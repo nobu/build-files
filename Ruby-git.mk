@@ -15,26 +15,31 @@ endif
 all: up backup
 up: fetch rebase
 
-fetch:
+fetch: .force
 	git fetch
 	$(if $(wildcard $(gitdir)/svn),git svn fetch)
 
-rebase: $(addprefix rebase-,$(branches))
+rebase: $(addprefix rebase-,$(branches)) .force
 
 define rebasecmd
-rebase-$(1):
+.PHONY: rebase-$(1)
+rebase-$(1): .force
 	git rebase origin$(if $(filter-out master,$(1)),/$(1)) $(1)
 endef
 $(foreach branch,$(branches),$(eval $(call rebasecmd,$(branch))))
 
-branches:; echo $(branches)
+branches: .force
+	echo $(branches)
 
-backup: $(backup)
+backup: $(backup) .force
 
 $(backup): $(gitdir) gc
 	tar $(backuparg) -cjf $@ $(backupdir)
 
-gc:
+gc: .force
 	du -s $(gitdir)
 	git gc --prune
 	du -s $(gitdir)
+
+.PHONY: .force fetch rebase branch backup gc
+.force:

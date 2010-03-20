@@ -217,14 +217,14 @@ $(1)/config.status:
 	@$$(SETTITLE) making $$(@F) in $$(@D)
 	-$$(submake) TOPMAKE=$(value TOPMAKE) $$(@F)
 
-$(1)/%: .PHONY prereq
+$(1)/%: prereq .force
 	@$$(SETTITLE) making $$(@F) in $$(@D)
 	+$$(submake) TOPMAKE=$(value TOPMAKE) $$(mflags) $$(@F)
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
 phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: common.mk | sed s/:.*$$//)
-phony-filter += $(shell sed '/\.PHONY$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
+phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
@@ -283,12 +283,12 @@ host-miniruby: $(MINIRUBY)
 lex.c: $(KEYWORDS)
 
 ripper_hdrdir = $(if $(wildcard include/ruby/ruby.h),top_srcdir,hdrdir)
-ripper: .PHONY
+ripper: .force
 	$(CMDSTARTING)
 	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend $(ripper_hdrdir)=../.. srcdir=. RUBY="$(RUBY)"
 	$(FINISHED)
 
-revision.h: .PHONY
+revision.h: .force
 
 ifeq ($(filter revision.h,$(prereq-targets)),)
 revision.h:
@@ -302,15 +302,15 @@ revision.h:
 #	@! fgrep revision.h version.h > /dev/null || $(BASERUBY) tool/revup.rb
 endif
 
-help: .PHONY
+help: .force
 	@$(MAKE) -f common.mk $@
 
-update-prereq: .PHONY
+update-prereq: .force
 	$(MAKE) -C $(patsubst file:%,%,$(ORIGIN_URL)) up
 
-up: .do-up revision.h .PHONY
+up: .do-up revision.h .force
 
-UP: .PHONY
+UP: .force
 	@echo $(VCSUP) $(UPS); \
 	while $(VCSUP) $(UPS) | tee makeup.log | $(PAGER) +/^C; \
 	      grep ^C makeup.log; do \
@@ -318,7 +318,7 @@ UP: .PHONY
 	done; \
 	rm -f makeup.log
 
-tags: TAGS .PHONY
+tags: TAGS .force
 
 TAGS: $(SRCS)
 	etags -lc $(wildcard $(patsubst template/%.tmpl,%,$(SRCS)))
@@ -328,7 +328,7 @@ ifneq ($(wildcard $(EXTOUT)),)
 	sudo $(MAKE) prereq-targets= install
 endif
 
-install-prereq: .PHONY
+install-prereq: .force
 	@exit > $(INSTALLED_LIST)
 #	@MAKE=$(MAKE) touch install-prereq
 #	@rm -f install-prereq
@@ -357,9 +357,10 @@ post-install-local: $(subdirs:=/post-install-local)
 pre-install-ext: $(subdirs:=/pre-install-ext)
 post-install-ext: $(subdirs:=/post-install-ext)
 
-check: .PHONY prereq .pre-check test test-all .post-check
-test: .PHONY prereq .pre-test $(subdirs:=/test) .post-test; sync
-test-all: .PHONY prereq .pre-test-all $(subdirs:=/test-all) .post-test-all; sync
+check: prereq .pre-check test test-all .post-check .force
+test: prereq .pre-test $(subdirs:=/test) .post-test .force
+test-all: prereq .pre-test-all $(subdirs:=/test-all) .post-test-all .force
+test test-all:; sync
 try: $(DEFAULTARCH)/miniruby try.rb
 	$(DEFAULTARCH)/miniruby try.rb
 
@@ -387,4 +388,5 @@ $(builttargets):
 	echo '$(dir) is not built')
 
 .PHONY: .force
+.force:
 
