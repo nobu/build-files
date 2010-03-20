@@ -37,6 +37,10 @@ UPDATE_REVISION = $(VCS) log -n 1 --grep='^ *git-svn-id:' $(@D) | \
 	sed -e '$$!d' \
 	-e 's, *git-svn-id: .*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
 	-e 's, *git-svn-id: .*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
+ORIGIN_URL := $(shell git config remote.origin.url)
+ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
+UPDATE_PREREQ := update-prereq
+endif
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[chy])\
 	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
@@ -265,7 +269,7 @@ $(prereq-targets):
 	$(if $(filter-out revision.h,$@),prereq)
 endif
 
-.do-up:
+.do-up: $(UPDATE_PREREQ)
 ifeq ($(filter .do-up,$(prereq-targets)),)
 	env LC_TIME=C $(VCSUP)
 ifeq ($(filter revision.h,$(prereq-targets)),)
@@ -300,6 +304,9 @@ endif
 
 help: .PHONY
 	@$(MAKE) -f common.mk $@
+
+update-prereq: .PHONY
+	$(MAKE) -C $(patsubst file:%,%,$(ORIGIN_URL)) up
 
 up: .do-up revision.h .PHONY
 
