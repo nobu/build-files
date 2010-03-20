@@ -269,7 +269,11 @@ $(prereq-targets):
 	$(if $(filter-out revision.h,$@),prereq)
 endif
 
-.do-up: $(UPDATE_PREREQ)
+.do-up: up-remote up-local
+
+up-remote: $(UPDATE_PREREQ) .force
+
+up-local: prereq .force
 ifeq ($(filter .do-up,$(prereq-targets)),)
 	env LC_TIME=C $(VCSUP)
 ifeq ($(filter revision.h,$(prereq-targets)),)

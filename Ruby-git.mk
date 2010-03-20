@@ -13,7 +13,9 @@ backuparg = -C ..
 endif
 
 all: up backup
-up: fetch rebase
+up: up-remote up-local .force
+up-remote: fetch rebase .force
+up-local: .force
 
 fetch: .force
 	git fetch

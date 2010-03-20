@@ -13,10 +13,18 @@ endef
 $(foreach goal,$(goals),$(eval $(value goal): $$(versions:=/$(value goal))))
 $(foreach subdir,$(versions),$(eval $(value subdir)/%:; $$(call dive)))
 
-up: $(addsuffix /up,$(versions))
+up: up-remote up-local
 	$(if $(wildcard .svn),svn up)
 #$(foreach subdir,$(versions),$(eval $(value subdir)/up:; svn up --accept postpone $$(@D)))
-$(foreach subdir,$(versions),$(eval $(value subdir)/up:; +$(MAKE) -$(MAKEFLAGS) -C $$(@D) UPDATE_PREREQ= up))
+
+$(foreach target,remote local,\
+$(eval up-$(value target): $(addsuffix /up-$(value target),$(versions)))\
+)
+
+$(foreach target,remote local,\
+$(foreach subdir,$(versions),\
+$(eval $(value subdir)/up-$(value target):; +$(MAKE) -$(MAKEFLAGS) -C $$(@D) UPDATE_PREREQ= up-$(value target))\
+))
 
 resolved:
 	@PWD= resolve-conflict $(versions)
