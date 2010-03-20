@@ -58,7 +58,8 @@ end
 config.sub!(/^(\s*)RUBY_VERSION\s*==.*(\sor\s*)$/, '\1true\2')
 config = Module.new {module_eval(config, conffile)}::Config::CONFIG
 
-ruby = File.expand_path(config['ruby_install_name']+config['EXEEXT'], archdir)
+ruby = File.basename(__FILE__).sub(/ruby/, config['ruby_install_name'])
+ruby = File.expand_path(ruby+config['EXEEXT'], archdir)
 File.exist?(ruby) or abort "#{ruby} is not found."
 
 if /cygwin/ =~ RUBY_PLATFORM and /cygwin/ !~ config["target_os"]
