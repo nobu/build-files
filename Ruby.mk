@@ -267,19 +267,23 @@ $(prereq-targets):
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out revision.h,$@),prereq)
-endif
-
-.do-up: up-remote up-local
-
-up-remote: $(UPDATE_PREREQ) .force
-
-up-local: prereq .force
+else
+.do-up:
 ifeq ($(filter .do-up,$(prereq-targets)),)
 	env LC_TIME=C $(VCSUP)
 ifeq ($(filter revision.h,$(prereq-targets)),)
 	-@$(RM) revision.h
 endif
 endif
+endif
+
+up: up-remote up-local
+.do-up-remote: .do-up .force
+
+up-remote: $(UPDATE_PREREQ) .do-up-remote .force
+
+up-local: prereq .force
+
 .do-prereq:
 
 host-miniruby: $(MINIRUBY)
