@@ -33,7 +33,7 @@ SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
 else ifneq ($(wildcard .git),)
-UPDATE_REVISION = $(VCS) log -n 1 $(@D) | \
+UPDATE_REVISION = $(VCS) log -n 1 --grep='^ *git-svn-id:' $(@D) | \
 	sed -e '$$!d' \
 	-e 's, *git-svn-id: .*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
 	-e 's, *git-svn-id: .*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
