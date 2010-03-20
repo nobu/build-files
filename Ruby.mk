@@ -223,7 +223,7 @@ $(1)/%: .PHONY prereq
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
-phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: common.mk | sed s/:$$//)
+phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: common.mk | sed s/:.*$$//)
 phony-filter += $(shell sed '/\.PHONY$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
