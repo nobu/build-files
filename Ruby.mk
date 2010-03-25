@@ -33,10 +33,10 @@ SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
 else ifneq ($(wildcard .git),)
-UPDATE_REVISION = $(VCS) log -n 1 --grep='^ *git-svn-id:' $(@D) | \
-	sed -e '$$!d' \
-	-e 's, *git-svn-id: .*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
-	-e 's, *git-svn-id: .*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
+UPDATE_REVISION = git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
+	sed -e '$$!d' -e '/ *git-svn-id: */!d' -e 's///' \
+	-e 's,.*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
+	-e 's,.*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
 ORIGIN_URL := $(shell git config remote.origin.url)
 ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
 UPDATE_PREREQ := update-prereq
