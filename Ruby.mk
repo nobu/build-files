@@ -276,6 +276,7 @@ ifeq ($(filter revision.h,$(prereq-targets)),)
 endif
 endif
 endif
+.do-up:
 
 up: up-remote up-local
 .do-up-remote: .do-up .force
