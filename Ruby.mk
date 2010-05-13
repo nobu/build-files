@@ -20,8 +20,6 @@ GIT_SVN = $(GIT) svn
 svn-up = update
 svn-up-options = --accept postpone
 GITSVN = git svn
-before-up := $(shell git diff --no-ext-diff --ignore-submodules --quiet --exit-code || echo stash-save)
-after-up := $(before-up:-save=-pop)
 ifneq ($(wildcard .svn/entries),)
 UPDATE_REVISION = $(VCS) info $(@D) | \
 	sed -n \
@@ -44,6 +42,8 @@ ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
 UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
+before-up := $(shell git diff --no-ext-diff --ignore-submodules --quiet --exit-code || echo stash-save)
+after-up := $(before-up:-save=-pop)
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[chy])\
 	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
