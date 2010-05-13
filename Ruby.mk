@@ -20,6 +20,8 @@ GIT_SVN = $(GIT) svn
 svn-up = update
 svn-up-options = --accept postpone
 GITSVN = git svn
+before-up := $(shell git diff --no-ext-diff --ignore-submodules --quiet --exit-code || echo stash-save)
+after-up := $(before-up:-save=-pop)
 ifneq ($(wildcard .svn/entries),)
 UPDATE_REVISION = $(VCS) info $(@D) | \
 	sed -n \
@@ -258,7 +260,7 @@ rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 configure: configure.in
 	+$(AUTOCONF)
 
-prereq-targets := $(shell grep -e '^up:' -e '^prereq:' -e '/revision\.h:' common.mk | \
+prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' common.mk | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
 ifneq ($(prereq-targets),)
 $(prereq-targets):
@@ -268,21 +270,19 @@ $(prereq-targets):
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out revision.h,$@),prereq)
-up-remote:
-	$(VCSUP)
-else
+endif
+
 .do-up:
-ifeq ($(filter .do-up,$(prereq-targets)),)
 	env LC_TIME=C $(VCSUP)
-ifeq ($(filter revision.h,$(prereq-targets)),)
-	-@$(RM) revision.h
-endif
-endif
-endif
-.do-up:
+	$(if $(filter revision.h,$(prereq-targets)),,-@$(RM) revision.h)
+
+stash-save:
+	$(GIT) stash save
+stash-pop:
+	$(GIT) stash pop
 
 up: up-remote up-local
-.do-up-remote: .do-up .force
+.do-up-remote: $(before-up) .do-up $(after-up) .force
 
 up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
 
@@ -322,7 +322,7 @@ update-prereq: .force
 
 update-prereq-local: $(UPDATE_PREREQ) .force
 
-up: .do-up revision.h .force
+up: revision.h .force
 
 UP: .force
 	@echo $(VCSUP) $(UPS); \
