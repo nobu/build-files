@@ -37,6 +37,7 @@ rbconf = "rbconfig.rb"
 arch = ENV["ARCH"] || RUBY_PLATFORM.sub(/^universal\./, '')
 i386 = ("i3#{$1}" if /^i[4-9](86-.*)/ =~ arch)
 universal = ("universal-darwin" if /darwin/ =~ arch)
+archdir &&= File.expand_path(archdir, srcdir)
 if archdir
   config = File.read(conffile = File.join(archdir, rbconf))
 elsif File.file?(conffile = File.join(archdir = File.join(srcdir, arch), rbconf))
