@@ -11,6 +11,7 @@ backupdir := $(notdir $(shell pwd))
 backup = ../$(backupdir).tar.bz2
 backuparg = -C ..
 endif
+backupopt = --dereference
 
 all: up backup
 up: up-remote up-local .force
@@ -36,7 +37,7 @@ branches: .force
 backup: $(backup) .force
 
 $(backup): $(gitdir) gc
-	tar $(backuparg) -cjf $@ $(backupdir)
+	tar $(backuparg) $(backupopt) -cjf $@ $(backupdir)
 
 gc: .force
 	du -s $(gitdir)
