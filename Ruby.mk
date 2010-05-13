@@ -39,6 +39,7 @@ UPDATE_REVISION = git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
 	-e 's,.*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
 ORIGIN_URL := $(shell git config remote.origin.url)
 ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
+UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
 
@@ -267,6 +268,8 @@ $(prereq-targets):
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out revision.h,$@),prereq)
+up-remote:
+	$(VCSUP)
 else
 .do-up:
 ifeq ($(filter .do-up,$(prereq-targets)),)
@@ -281,7 +284,7 @@ endif
 up: up-remote up-local
 .do-up-remote: .do-up .force
 
-up-remote: $(UPDATE_PREREQ) .do-up-remote .force
+up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
 
 up-local: prereq .force
 
@@ -316,6 +319,8 @@ help: .force
 
 update-prereq: .force
 	$(MAKE) -C $(patsubst file:%,%,$(ORIGIN_URL)) up
+
+update-prereq-local: $(UPDATE_PREREQ) .force
 
 up: .do-up revision.h .force
 
