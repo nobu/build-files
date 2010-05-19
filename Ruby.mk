@@ -42,7 +42,7 @@ ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
 UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
-before-up := $(shell git status --porcelain | sed 's/.*/stash-save/;q')
+before-up := $(shell git status --porcelain | sed '/^?/d;s/.*/stash-save/;q')
 after-up := $(before-up:-save=-pop)
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[chy])\
