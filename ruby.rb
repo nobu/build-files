@@ -101,7 +101,10 @@ if e = ENV["RUBYOPT"]
     end
   end
 end
-libs << File.expand_path("lib", srcdir)
+if File.directory?(lib = File.expand_path("lib", srcdir)) or
+    File.directory?(lib = File.expand_path("src/lib", srcdir))
+  libs << lib
+end
 
 ENV["RUBY"] = File.extern_path(ruby)
 ENV["PATH"] = [abs_archdir, ENV["PATH"]].compact.join(File::PATH_SEPARATOR)
