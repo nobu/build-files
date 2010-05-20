@@ -26,6 +26,12 @@ while arg = ARGV[0]
     rubyopt = value
   when re =~ "print-libraries"
     print_libraries = true
+  when re =~ "version" && value
+    unless File.directory?(dir = File.join(srcdir || File.dirname(__FILE__), value))
+      abort "#{$0}: version #{value} not found"
+    end
+    version = value
+    srcdir = dir
   else
     break
   end
@@ -37,31 +43,32 @@ rbconf = "rbconfig.rb"
 arch = ENV["ARCH"] || RUBY_PLATFORM.sub(/^universal\./, '')
 i386 = ("i3#{$1}" if /^i[4-9](86-.*)/ =~ arch)
 universal = ("universal-darwin" if /darwin/ =~ arch)
-archdir &&= File.expand_path(archdir, srcdir)
-if archdir
-  config = File.read(conffile = File.join(archdir, rbconf))
-elsif File.file?(conffile = File.join(archdir = File.join(srcdir, arch), rbconf))
-  config = File.read(conffile)
-elsif i386 and File.file?(conffile = File.join(archdir = File.join(srcdir, i386), rbconf))
-  config = File.read(conffile)
-elsif universal and File.file?(conffile = File.join(archdir = File.join(srcdir, universal), rbconf))
-  config = File.read(conffile)
-elsif File.file?(conffile = File.join(archdir = File.join(srcdir, "."+arch), rbconf))
-  config = File.read(conffile)
-elsif i386 and File.file?(conffile = File.join(archdir = File.join(srcdir, "."+i386), rbconf))
-  config = File.read(conffile)
-elsif universal and File.file?(conffile = File.join(archdir = File.join(srcdir, "."+universal), rbconf))
-  config = File.read(conffile)
-else
-  abort "archdir not defined"
-end
+begin
+  abs_archdir = (File.expand_path(archdir, srcdir) if archdir)
+  if abs_archdir and File.file?(conffile = File.join(abs_archdir, rbconf))
+    config = File.read(conffile)
+  elsif File.file?(conffile = File.join(abs_archdir = File.join(srcdir, arch), rbconf))
+    config = File.read(conffile)
+  elsif i386 and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, i386), rbconf))
+    config = File.read(conffile)
+  elsif universal and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, universal), rbconf))
+    config = File.read(conffile)
+  elsif File.file?(conffile = File.join(abs_archdir = File.join(srcdir, "."+arch), rbconf))
+    config = File.read(conffile)
+  elsif i386 and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, "."+i386), rbconf))
+    config = File.read(conffile)
+  elsif universal and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, "."+universal), rbconf))
+    config = File.read(conffile)
+  elsif !version
+    srcdir = File.join(srcdir, version = "trunk")
+    redo
+  else
+    abort "archdir not defined"
+  end
+end while false
 
 config.sub!(/^(\s*)RUBY_VERSION\s*==.*(\sor\s*)$/, '\1true\2')
 config = Module.new {module_eval(config, conffile)}::Config::CONFIG
-
-ruby = File.basename(__FILE__).sub(/ruby/, config['ruby_install_name'])
-ruby = File.expand_path(ruby+config['EXEEXT'], archdir)
-File.exist?(ruby) or abort "#{ruby} is not found."
 
 if /cygwin/ =~ RUBY_PLATFORM and /cygwin/ !~ config["target_os"]
   def File.extern_path(path)
@@ -76,10 +83,15 @@ end
 
 begin
   require 'pathname'
-  abs_archdir = Pathname.new(archdir).realpath.to_s
+  abs_archdir = Pathname.new(abs_archdir).realpath.to_s
 rescue Errno::EINVAL
-  abs_archdir = File.extern_path(archdir)
+  abs_archdir = File.extern_path(abs_archdir)
 end
+
+ruby = File.basename(__FILE__).sub(/ruby/, config['ruby_install_name'])
+ruby = File.expand_path(ruby+config['EXEEXT'], abs_archdir)
+File.exist?(ruby) or abort "#{ruby} is not found."
+
 libs = [abs_archdir]
 if extout
   abs_extout = File.extern_path(extout)
