@@ -166,7 +166,7 @@ endif
 
 PAGER ?= less
 ifeq ($(origin MAKEFILE_LIST),undefined)
-MAKEFILE_LIST := $(wildcard GNUmakefile Makefile makefile $(MAKEFILES))
+MAKEFILE_LIST := $(wildcard GNUmakefile Makefile makefile Makefile.in common.mk $(MAKEFILES))
 endif
 EXTOUT ?= ../ext
 RDOCOUT ?= $(EXTOUT)/rdoc
@@ -226,13 +226,13 @@ $(1)/%: prereq .force
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
-phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: common.mk | sed s/:.*$$//)
-phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
+phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: -e ^change: common.mk | sed s/:.*$$//)
+phony-filter += $(shell sed '/PHONY$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
 $(foreach goal,all $(filter-out $(subdirs:=/%) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): .pre-$(value goal)))
-$(foreach goal,all $(filter-out $(subdir-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
+$(foreach goal,all $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
 $(foreach goal,$(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(FINISHED)))
 
 prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
@@ -260,7 +260,7 @@ rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 configure: configure.in
 	+$(AUTOCONF)
 
-prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' common.mk | \
+prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e change common.mk | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
 ifneq ($(prereq-targets),)
 $(prereq-targets):
