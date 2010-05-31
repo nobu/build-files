@@ -227,7 +227,7 @@ endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
 phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: -e ^change: common.mk | sed s/:.*$$//)
-phony-filter += $(shell sed '/PHONY$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
+phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
@@ -260,7 +260,7 @@ rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 configure: configure.in
 	+$(AUTOCONF)
 
-prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e change common.mk | \
+prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' common.mk | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
 ifneq ($(prereq-targets),)
 $(prereq-targets):
@@ -281,7 +281,7 @@ stash-save:
 stash-pop:
 	$(GIT) stash pop
 
-up: up-remote up-local
+up: up-remote up-local .force
 .do-up-remote: $(before-up) .do-up $(after-up) .force
 
 up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
@@ -301,6 +301,7 @@ ripper: .force
 	$(FINISHED)
 
 revision.h: .force
+.revision.time: .force
 
 ifeq ($(filter revision.h,$(prereq-targets)),)
 revision.h:
