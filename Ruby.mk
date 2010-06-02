@@ -263,6 +263,8 @@ configure: configure.in
 prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' common.mk | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
 ifneq ($(prereq-targets),)
+$(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
+
 $(prereq-targets):
 	@{ sed 's/@[A-Z][A-Z_0-9]*@//g' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
 	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
