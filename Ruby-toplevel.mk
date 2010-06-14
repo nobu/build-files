@@ -2,6 +2,8 @@ versions := *
 override versions := $(patsubst %/,%,$(dir $(wildcard $(addsuffix /GNUmakefile,$(versions)) $(addsuffix /src/GNUmakefile,$(versions)))))
 goals := all $(filter-out %/all $(shell sed '/^[a-zA-Z_][-a-zA-Z0-9_]*:/!d;s/:.*//;s:.*:& %/&:' $(MAKEFILE_LIST)),$(MAKECMDGOALS))
 unexport versions goals
+svn_versions := $(dir $(wildcard $(addsuffix /.svn,$(versions))))
+git_versions := $(dir $(wildcard $(addsuffix /.git,$(versions))))
 
 define dive
 $(MAKE) -C $(@D) $(if $(filter --,$(MAKEFLAGS))$(filter $(firstword $(MAKEFLAGS)),$(subst =,,$(firstword $(MAKEFLAGS)))),-)$(MAKEFLAGS) $(@F)
@@ -29,8 +31,10 @@ $(eval $(value subdir)/up-$(value target):; +$(MAKE) -$(MAKEFLAGS) -C $$(@D) UPD
 resolved:
 	@PWD= resolve-conflict $(versions)
 
-stat:
-	! svn $@ $(versions) | grep '^C'
+stat: status
+status:
+	$(if $(svn_versions),! svn $@ $(svn_versions) | grep '^C')
+	$(if $(git_versions),@for dir in $(git_versions); do (echo $$dir; cd $$dir && exec git $@); done)
 
 edit:
 	$(EDITOR) `svn stat $(versions) | sed -n 's/^C//p'`
