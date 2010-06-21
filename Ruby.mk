@@ -86,7 +86,10 @@ else
 tty := $(shell sh -c "test -t 2 && echo tty")
 endif
 
-SETTITLE := $(call or,$(if $(tty),$(shell sh -c "type -p settitle"),$(shell echo ': -*- compilation -*-' 1>&2)),:)
+SETTITLE := $(call or,\
+    $(if $(tty),$(shell sh -c "type settitle 2>/dev/null | sed 's/^.* is //'"),\
+		$(shell echo ': -*- compilation -*-' 1>&2)),\
+    :)
 define MESSAGE
 $(if $(nonexec),,@$(SETTITLE) making $(if $(2),$(2),$@))
 $(if $(nonexec),,@echo ")<=== $(1) $(if $(2),$(2),$@) ===>$(if $(nonexec),,")
