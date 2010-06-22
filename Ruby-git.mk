@@ -13,7 +13,7 @@ backuparg = -C ..
 endif
 backupopt = --dereference
 
-all: up backup
+all:
 up: up-remote up-local .force
 up-remote: fetch rebase .force
 up-local: .force
