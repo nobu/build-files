@@ -42,17 +42,17 @@ ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
 UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
-before-up := $(shell git status --porcelain | sed '/^?/d;s/.*/stash-save/;q')
-after-up := $(before-up:-save=-pop)
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[chy])\
 	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
 	$(call git_srcs,*.def) $(call git_srcs,missing/) \
         $(call git_srcs,enc/) $(call git_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
-  ifneq ($(wildcard .git/svn),)
+  ifneq ($(if $(wildcard .git/svn),$(shell test -L .git/svn || echo .git/svn)),)
 VCS = $(GIT_SVN)
 VCSUP = $(VCS) rebase $(gitsvnup-options)
+before-up := $(shell git status --porcelain | sed '/^?/d;s/.*/stash-save/;q')
+after-up := $(before-up:-save=-pop)
 #  else ifeq ($(patsubst +%,+,$(shell git config remote.origin.fetch)),+)
 #GIT_ORIGIN = $(shell git config remote.origin.url)
 #VCS = $(GIT)
@@ -70,6 +70,8 @@ endif
 TESTS ?= $(if $(wildcard .tests),$(shell cat .tests),$(EXTS))
 
 VCSUP ?= $(VCS) $(call or,$(value $(subst  ,-,$(VCS))up),up) $(value $(subst  ,-,$(VCS))up-options)
+before-up ?=
+after-up ?=
 
 nonexec :=
 print-database :=
@@ -240,7 +242,6 @@ $(foreach goal,$(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\;
 
 prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
 	@-sync
-prereq: MAKEFLAGS += --no-print-directory
 
 resolved:
 	@PWD= resolve-conflict
