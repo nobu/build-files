@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 command = []
+envs = {}
 while arg = ARGV[0]
   break ARGV.shift if arg == '--'
   /\A--([-\w]+)(?:=(.*))?\z/ =~ arg or break
@@ -32,6 +33,9 @@ while arg = ARGV[0]
     end
     version = value
     srcdir = dir
+  when re =~ "env"
+    value = value.split(/=/, 2)
+    envs[value.first] = value.last
   else
     break
   end
@@ -147,6 +151,8 @@ if File.file?(libruby_so)
   end
 end
 ENV["DYLD_PRINT_LIBRARIES"] = "1" if print_libraries
+
+ENV.update(envs)
 
 command << ruby
 exec *command.concat(ARGV)
