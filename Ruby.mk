@@ -1,14 +1,17 @@
 RUBYOPT =
 PWD := $(shell pwd)
+srcdir_prefix := $(if $(wildcard Makefile.in),,$(if $(wildcard src/Makefile.in),src/,))
+srcdir := $(if $(srcdir_prefix),$(patsubst %/,%,$(srcdir_prefix)),.)
+in-srcdir := $(if $(srcdir_prefix),cd $(srcdir) &&)
 
 define cvs_srcs
-$(addprefix $(1),$(shell cut -d/ -f2 $(1)CVS/Entries | grep -e '\.[chy]$$' | sort))
+$(addprefix $(srcdir_prefix)$(1),$(shell cut -d/ -f2 $(srcdir_prefix)$(1)CVS/Entries | grep -e '\.[chy]$$' | sort))
 endef
 define svn_srcs
-$(subst .svn/text-base/,,$(patsubst %.svn-base,%,$(wildcard $(filter-out ./,$(dir $(1))).svn/text-base/$(call or,$(notdir $(1)),*.[chy]).svn-base)))
+$(subst .svn/text-base/,,$(patsubst %.svn-base,%,$(wildcard $(filter-out ./,$(dir $(srcdir_prefix)$(1))).svn/text-base/$(call or,$(notdir $(1)),*.[chy]).svn-base)))
 endef
 define git_srcs
-$(shell $(GIT) ls-files $(1) $(2) $(3) | grep -v '^ext/')
+$(shell $(in-srcdir) $(GIT) ls-files $(1) $(2) $(3) | grep -v '^ext/')
 endef
 
 or = $(if $(1),$(1),$(2))
@@ -19,9 +22,8 @@ GIT = git
 GIT_SVN = $(GIT) svn
 svn-up = update
 svn-up-options = --accept postpone
-GITSVN = git svn
-ifneq ($(wildcard .svn/entries),)
-UPDATE_REVISION = $(VCS) info $(@D) | \
+ifneq ($(wildcard $(srcdir)/.svn/entries),)
+UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 	sed -n \
 	-e 's,^URL:.*/branches/\([^/]*\)$$,\#define RUBY_BRANCH_NAME "\1",p' \
 	-e 's/.*Rev:/\#define RUBY_REVISION/p'
@@ -32,12 +34,12 @@ SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,*.def) $(call svn_srcs,missing/) \
 	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
-else ifneq ($(wildcard .git),)
-UPDATE_REVISION = git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
+else ifneq ($(wildcard $(srcdir)/.git),)
+UPDATE_REVISION = $(in-srcdir) git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
 	sed -e '$$!d' -e '/ *git-svn-id: */!d' -e 's///' \
 	-e 's,.*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
 	-e 's,.*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
-ORIGIN_URL := $(shell git config remote.origin.url)
+ORIGIN_URL := $(shell $(in-srcdir) git config remote.origin.url)
 ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
 UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
@@ -61,11 +63,11 @@ after-up := $(before-up:-save=-pop)
 VCS = $(GIT)
 VCSUP = $(VCS) pull
   endif
-else ifneq ($(wildcard CVS/Entries),)
+else ifneq ($(wildcard $(srcdir)/CVS/Entries),)
 VCS = $(CVS)
 SRCS := $(call cvs_srcs) $(call cvs_srcs,missing/) $(call cvs_srcs,win32/)
 else
-SRCS := $(wildcard *.h $(filter-out parse.c,*.c) parse.y missing/*.[ch] win32/win32.[ch] win32/dir.h)
+SRCS := $(wildcard $(srcdir_prefix)*.h $(filter-out $(srcdir_prefix)parse.c,$(srcdir_prefix)*.c) $(srcdir_prefix)parse.y $(srcdir_prefix)missing/*.[ch] $(srcdir_prefix)win32/win32.[ch] $(srcdir_prefix)win32/dir.h)
 endif
 TESTS ?= $(if $(wildcard .tests),$(shell cat .tests),$(EXTS))
 
@@ -134,8 +136,8 @@ configure-bccwin32 = bcc32/Makefile.sub
 config-bccwin32 = cd $(@D); \
 	$(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/bcc32/configure.bat
 endif
-common.mk := $(wildcard common.mk)
-configure-default = Makefile.in $(common.mk) $(subdir)/config.status
+common.mk := $(wildcard $(srcdir_prefix)common.mk)
+configure-default = $(srcdir_prefix)Makefile.in $(common.mk) $(subdir)/config.status
 submake = $(strip $(call $(if $(make-$(target)),make-$(target),make-default),$(@D)) $(CMDVARS))
 
 AUTOCONF = autoconf
@@ -231,7 +233,7 @@ $(1)/%: prereq .force
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
-phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: -e ^change: common.mk | sed s/:.*$$//)
+phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: -e ^change: $(common.mk) | sed s/:.*$$//)
 phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
@@ -257,20 +259,20 @@ config: .pre-config $(subdirs:=/config.status) .post-config
 rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
 %.c: %.y
-	+{ sed '/^@/d' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
+	+$(in-srcdir) { sed '/^@/d' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
 	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" $@
 	$(CMDFINISHED)
 
 configure: configure.in
 	+$(AUTOCONF)
 
-prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' common.mk | \
+prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
 ifneq ($(prereq-targets),)
 $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
 
 $(prereq-targets):
-	@{ sed 's/@[A-Z][A-Z_0-9]*@//g' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
+	@$(in-srcdir) { sed 's/@[A-Z][A-Z_0-9]*@//g' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
 	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" VCSUP="$(VCSUP)" VCS="$(VCS)" \
@@ -279,13 +281,13 @@ $(prereq-targets):
 endif
 
 .do-up:
-	env LC_TIME=C $(VCSUP)
+	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
 	$(if $(filter revision.h,$(prereq-targets)),,-@$(RM) revision.h)
 
 stash-save:
-	$(GIT) stash save
+	$(in-srcdir) $(GIT) stash save
 stash-pop:
-	$(GIT) stash pop
+	$(in-srcdir) $(GIT) stash pop
 
 up: up-remote up-local .force
 .do-up-remote: $(before-up) .do-up $(after-up) .force
@@ -322,7 +324,7 @@ revision.h:
 endif
 
 help: .force
-	@$(MAKE) -f common.mk $@
+	@$(MAKE) -f $(common.mk) $@
 
 update-prereq: .force
 	$(MAKE) -C $(patsubst file:%,%,$(ORIGIN_URL)) up
