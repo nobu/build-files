@@ -268,6 +268,8 @@ configure: configure.in
 
 prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
+prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
+
 ifneq ($(prereq-targets),)
 $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
 
@@ -282,7 +284,7 @@ endif
 
 .do-up:
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
-	$(if $(filter revision.h,$(prereq-targets)),,-@$(RM) revision.h)
+	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 
 stash-save:
 	$(in-srcdir) $(GIT) stash save
@@ -311,9 +313,9 @@ ripper: .force
 revision.h: .force
 .revision.time: .force
 
-ifeq ($(filter revision.h,$(prereq-targets)),)
-revision.h:
-	@LC_MESSAGES=C $(UPDATE_REVISION) > "$@.tmp"
+ifeq ($(filter $(srcdir_prefix)revision.h,$(prereq-targets)),)
+$(srcdir_prefix)revision.h:
+	@{ $(in-srcdir) LC_MESSAGES=C $(UPDATE_REVISION); } > "$@.tmp"
 	@if test -f "$@" -a -s "$@.tmp" && diff -u "$@" "$@.tmp" > /dev/null 2>&1; then \
 	    rm -f "$@.tmp"; \
 	else \
