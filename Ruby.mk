@@ -296,6 +296,9 @@ up: up-remote up-local .force
 
 up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
 
+ifneq ($(UPDATE_PREREQ_LOCAL),)
+up-local: .do-up-remote
+endif
 up-local: prereq .force
 
 .do-prereq:
