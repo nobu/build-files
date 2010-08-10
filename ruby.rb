@@ -72,7 +72,10 @@ begin
 end while false
 
 config.sub!(/^(\s*)RUBY_VERSION\s*==.*(\sor\s*)$/, '\1true\2')
-config = Module.new {module_eval(config, conffile)}::Config::CONFIG
+config = Module.new {
+  module_eval(config, conffile)
+  RbConfig = Config unless const_defined?(:RbConfig)
+}::RbConfig::CONFIG
 
 if /cygwin/ =~ RUBY_PLATFORM and /cygwin/ !~ config["target_os"]
   def File.extern_path(path)
