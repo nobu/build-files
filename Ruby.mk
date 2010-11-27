@@ -14,6 +14,15 @@ define git_srcs
 $(shell $(in-srcdir) $(GIT) ls-files $(1) $(2) $(3) | grep -v '^ext/')
 endef
 
+V = 0
+ifeq ($(V),0)
+export ECHO = @echo
+export Q = @
+else
+export ECHO = @:
+export Q =
+endif
+
 or = $(if $(1),$(1),$(2))
 
 CVS = cvs -f
