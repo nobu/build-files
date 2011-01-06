@@ -242,7 +242,7 @@ $(1)/%: prereq .force
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
-phony-filter := TAGS builtpack% $(shell grep -e ^incs: -e ^srcs: -e ^change: $(common.mk) | sed s/:.*$$//)
+phony-filter := TAGS builtpack% $(if $(common.mk),$(shell grep -e ^incs: -e ^srcs: -e ^change: $(common.mk) | sed s/:.*$$//))
 phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
@@ -268,22 +268,28 @@ config: .pre-config $(subdirs:=/config.status) .post-config
 rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
 %.c: %.y
-	+$(in-srcdir) { sed '/^@/d' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
+	+$(in-srcdir) { \
+	  sed '/^@/d' Makefile.in; \
+	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
+	} | \
 	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" $@
 	$(CMDFINISHED)
 
 configure: configure.in
 	+$(AUTOCONF)
 
-prereq-targets := $(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
-		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,')
+prereq-targets := $(if $(common.mk),$(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
+		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,'))
 prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
 
 ifneq ($(prereq-targets),)
 $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
 
 $(prereq-targets):
-	@$(in-srcdir) { sed 's/@[A-Z][A-Z_0-9]*@//g' Makefile.in; sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' common.mk; } | \
+	@$(in-srcdir) { \
+	  sed 's/@[A-Z][A-Z_0-9]*@//g' Makefile.in; \
+	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
+	} | \
 	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" VCSUP="$(VCSUP)" VCS="$(VCS)" \
@@ -338,7 +344,7 @@ $(srcdir_prefix)revision.h:
 endif
 
 help: .force
-	@$(MAKE) -f $(common.mk) $@
+	@$(MAKE) -f common.mk $@
 
 update-prereq: .force
 	$(MAKE) -C $(patsubst file:%,%,$(ORIGIN_URL)) up
