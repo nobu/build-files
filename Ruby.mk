@@ -168,8 +168,9 @@ CONFIGURE = $(CONFIGURE_IN:.in=)
 PARSE_Y := $(wildcard parse.y)
 KEYWORDS := $(call or,$(wildcard defs/keywords),$(wildcard keywords))
 LEX_C := $(if $(KEYWORDS),lex.c)
+ID_H := $(shell sed '/^id\.h:/!d;s/:.*//p' common.mk)
 RIPPER := $(if $(wildcard ext/ripper/depend),ripper)
-PREREQ = .force $(CONFIGURE) $(PARSE_Y:.y=.c) $(LEX_C) revision.h .revision.time
+PREREQ = .force $(CONFIGURE) $(PARSE_Y:.y=.c) $(LEX_C) $(ID_H) revision.h .revision.time
 ifndef RUBY
 NATIVEARCH := $(patsubst %/Makefile,%,$(shell grep -l '^PREP *= *miniruby' $(subdirs:=/Makefile) /dev/null))
 DEFAULTARCH := $(word 1, $(filter $(ARCH) .$(ARCH),$(NATIVEARCH)) $(NATIVEARCH))
