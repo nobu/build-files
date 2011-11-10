@@ -366,7 +366,8 @@ UP: .force
 tags: TAGS .force
 
 TAGS: $(SRCS)
-	etags -lc $(wildcard $(patsubst template/%.tmpl,%,$(SRCS)))
+	@echo updating $@
+	@etags -lc $(wildcard $(patsubst template/%.tmpl,%,$(SRCS)))
 
 sudo-install:
 ifneq ($(wildcard $(EXTOUT)),)
