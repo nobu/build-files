@@ -183,9 +183,7 @@ endif
 #subdirs := $(filter-out $(DEFAULTARCH),$(subdirs)) $(DEFAULTARCH)
 
 PAGER ?= less
-ifeq ($(origin MAKEFILE_LIST),undefined)
-MAKEFILE_LIST := $(wildcard GNUmakefile Makefile makefile Makefile.in common.mk $(MAKEFILES))
-endif
+MAKEFILE_LIST := $(sort $(wildcard $(MAKEFILE_LIST) GNUmakefile Makefile makefile Makefile.in common.mk $(MAKEFILES)))
 EXTOUT ?= ../ext
 RDOCOUT ?= $(EXTOUT)/rdoc
 RBCONFIG ?= ./.rbconfig.time
@@ -246,6 +244,8 @@ $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
 phony-filter := TAGS builtpack% $(if $(common.mk),$(shell grep -e ^incs: -e ^srcs: -e ^change: $(common.mk) | sed s/:.*$$//))
 phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
+phony-filter += $(shell sed -n 's/^\.PHONY://p' $(MAKEFILE_LIST))
+phony-filter := $(sort $(phony-filter))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
