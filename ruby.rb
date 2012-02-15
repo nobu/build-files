@@ -34,7 +34,7 @@ while arg = ARGV[0]
     version = value
     srcdir = dir
   when re =~ "env"
-    value = value.split(/=/, 2)
+    value = value.split(/\=/, 2)
     envs[value.first] = value.last
   else
     break
