@@ -31,6 +31,7 @@ GIT = git
 GIT_SVN = $(GIT) svn
 svn-up = update
 svn-up-options = --accept postpone
+git-up = pull
 ifneq ($(wildcard $(srcdir)/.svn/entries),)
 UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 	sed -n \
