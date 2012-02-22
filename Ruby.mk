@@ -251,7 +251,7 @@ subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
 $(foreach goal,all $(filter-out $(subdirs:=/%) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): .pre-$(value goal)))
 $(foreach goal,all $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
-$(foreach goal,$(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(FINISHED)))
+$(foreach goal,$(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
 
 prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
 	@-sync
