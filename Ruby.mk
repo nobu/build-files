@@ -242,16 +242,17 @@ $(1)/%: prereq .force
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
+phony-targets = all main prog
 phony-filter := TAGS builtpack% $(if $(common.mk),$(shell grep -e ^incs: -e ^srcs: -e ^change: $(common.mk) | sed s/:.*$$//))
 phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 phony-filter += $(shell sed -n 's/^\.PHONY://p' $(MAKEFILE_LIST))
 phony-filter := $(sort $(phony-filter))
 prereq-filter = prereq .pre-prereq $(PREREQ) $(RIPPER) config Makefile $(MINIRUBY) $(phony-filter)
 subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
-$(foreach goal,all $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
-$(foreach goal,all $(filter-out $(subdirs:=/%) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): .pre-$(value goal)))
-$(foreach goal,all $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
-$(foreach goal,$(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
+$(foreach goal,$(phony-targets) $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
+$(foreach goal,$(phony-targets) $(filter-out $(subdirs:=/%) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): .pre-$(value goal)))
+$(foreach goal,$(phony-targets) $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
+$(foreach goal,$(phony-targets) $(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
 
 prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
 	@-sync
