@@ -1,3 +1,12 @@
+V := $(shell [ -t 1 ] && echo 1)
+ifeq ($(if $(V),$(V),0),0)
+Q = @
+ECHO = :
+else
+Q =
+ECHO = @echo
+endif
+
 inside-work-tree := $(git rev-parse --is-inside-work-tree)
 ifeq ($(inside-work-tree),true)
 branches := $(shell git branch -l | sort | sed 's/\*//')
@@ -19,8 +28,8 @@ up-remote: fetch rebase .force
 up-local: .force
 
 fetch: .force
-	git fetch
-	$(if $(wildcard $(gitdir)/svn),git svn fetch)
+	$(Q) git fetch
+	$(Q) $(if $(wildcard $(gitdir)/svn),git svn fetch)
 
 rebase: $(addprefix rebase-,$(branches)) .force
 
