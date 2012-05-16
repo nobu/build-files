@@ -22,7 +22,13 @@ while arg = ARGV[0]
     require 'shellwords'
     command.concat(Shellwords.shellwords(value))
   when re =~ "gdb"
-    command.unshift(value || "gdb", "--args")
+    command.unshift("--args")
+    if value
+      require 'shellwords'
+      command.unshift(*Shellwords.shellwords(value))
+    else
+      command.unshift("gdb")
+    end
   when re =~ "rubyopt"
     rubyopt = value
   when re =~ "print-libraries"
