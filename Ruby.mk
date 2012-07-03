@@ -303,6 +303,7 @@ endif
 
 .do-up:
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
+	$(if $(filter-out $(GIT),$(VCS)),,-$(call or,$(in-srcdir),env) LC_TIME=C $(GIT) pull --no-edit --rebase)
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 
 stash-save:
