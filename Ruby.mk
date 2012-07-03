@@ -31,7 +31,7 @@ GIT = git
 GIT_SVN = $(GIT) svn
 svn-up = update
 svn-up-options = --accept postpone
-git-up = pull
+git-up = pull --no-edit
 ifneq ($(wildcard $(srcdir)/.svn/entries),)
 UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 	sed -n \
@@ -71,7 +71,7 @@ after-up := $(before-up:-save=-pop)
 #VCSUP = $(MAKE) -C "$(GIT_ORIGIN)" gitup-options=$(gitup-options) up
   else
 VCS = $(GIT)
-VCSUP = $(VCS) pull
+VCSUP = $(VCS) $(git-up)
   endif
 else ifneq ($(wildcard $(srcdir)/CVS/Entries),)
 VCS = $(CVS)
