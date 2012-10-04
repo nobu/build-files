@@ -30,6 +30,7 @@ up-local: .force
 fetch: .force
 	$(Q) git fetch
 	$(Q) $(if $(wildcard $(gitdir)/svn),git svn fetch)
+	$(Q) $(if $(wildcard $(gitdir)/svn),cp -up `find refs/remotes/origin -maxdepth 1 -type f` refs/heads/)
 
 rebase: $(addprefix rebase-,$(branches)) .force
 
