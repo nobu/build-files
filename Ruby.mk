@@ -275,7 +275,7 @@ rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 	  sed '/^@/d' Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
-	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" $@
+	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
 	$(CMDFINISHED)
 
 configure: configure.in
@@ -330,7 +330,7 @@ lex.c: $(KEYWORDS)
 ripper_hdrdir = $(if $(wildcard include/ruby/ruby.h),top_srcdir,hdrdir)
 ripper: .force
 	$(CMDSTARTING)
-	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend $(ripper_hdrdir)=../.. srcdir=. RUBY="$(RUBY)"
+	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. RUBY="$(RUBY)"
 	$(FINISHED)
 
 revision.h: .force
