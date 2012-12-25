@@ -297,6 +297,7 @@ $(prereq-targets):
 	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
+	PATH_SEPARATOR=: \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out revision.h,$@),prereq)
 endif
