@@ -148,7 +148,7 @@ config-bccwin32 = cd $(@D); \
 endif
 common.mk := $(wildcard $(srcdir_prefix)common.mk)
 configure-default = $(srcdir_prefix)Makefile.in $(common.mk) $(subdir)/config.status
-submake = $(strip $(call $(if $(make-$(target)),make-$(target),make-default),$(@D)) $(CMDVARS))
+submake = $(strip $(call $(if $(make-$(target)),make-$(target),make-default),$(@D)) $(CMDVARS)) $(MFLAGS)
 
 AUTOCONF = autoconf
 RM = rm -f
