@@ -234,7 +234,7 @@ $(1)/config.status: make-precommand += time
 
 $(1)/config.status:
 	@$$(SETTITLE) making $$(@F) in $$(@D)
-	-env -u RUBY $$(submake) TOPMAKE=$(value TOPMAKE) $$(@F)
+	-RUBY= $$(submake) TOPMAKE=$(value TOPMAKE) $$(@F)
 
 $(1)/%: prereq .force
 	@$$(SETTITLE) making $$(@F) in $$(@D)
