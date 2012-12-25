@@ -52,7 +52,7 @@ srcdir ||= File.dirname(__FILE__)
 rbconf = "rbconfig.rb"
 arch =
   if host = ENV["HOSTTYPE"] and os = ENV["OSTYPE"]
-    "#{host}-#{os.sub(/\d+\z/, '')}"
+    "#{host}-#{os.sub(/[.\d]+\z/, '')}"
   else
     ENV["PLATFORM"] || ENV["arch"] || ENV["ARCH"] || RUBY_PLATFORM.sub(/^universal\./, '')
   end
