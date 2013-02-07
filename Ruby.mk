@@ -72,6 +72,10 @@ after-up := $(before-up:-save=-pop)
   else
 VCS = $(GIT)
 VCSUP = $(VCS) $(git-up)
+    ifneq ($(wildcard .git/svn),)
+POST_UP1 = $(GIT) pull --no-edit --rebase
+POST_UP2 = $(GIT_SVN) rebase
+    endif
   endif
 else ifneq ($(wildcard $(srcdir)/CVS/Entries),)
 VCS = $(CVS)
@@ -304,7 +308,8 @@ endif
 
 .do-up:
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
-	$(if $(filter-out $(GIT),$(VCS)),,-$(call or,$(in-srcdir),env) LC_TIME=C $(GIT) pull --no-edit --rebase)
+	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
+	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 
 stash-save:
