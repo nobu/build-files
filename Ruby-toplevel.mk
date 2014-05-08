@@ -6,7 +6,7 @@ svn_versions := $(dir $(wildcard $(addsuffix /.svn,$(versions))))
 git_versions := $(dir $(wildcard $(addsuffix /.git,$(versions))))
 
 define dive
-$(MAKE) -C $(@D) $(if $(filter --,$(MAKEFLAGS))$(filter $(firstword $(MAKEFLAGS)),$(subst =,,$(firstword $(MAKEFLAGS)))),-)$(MAKEFLAGS) $(@F)
++$(MAKE) -C $(@D) $(if $(filter --,$(MAKEFLAGS))$(filter $(firstword $(MAKEFLAGS)),$(subst =,,$(firstword $(MAKEFLAGS)))),-)$(MAKEFLAGS) $(@F)
 endef
 define no-need-install
 ! { [ -e $(@D)/miniruby ] && $(@D)/miniruby -e 'exit RUBY_REVISION > `ruby-#{RUBY_VERSION} -e "p RUBY_REVISION"`.to_i'; }
