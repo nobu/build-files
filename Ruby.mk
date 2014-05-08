@@ -273,6 +273,8 @@ Makefile: .pre-Makefile $(subdirs:=/Makefile) .post-Makefile
 
 config: .pre-config $(subdirs:=/config.status) .post-config
 
+reconfig: .pre-config $(subdirs:=/reconfig) .post-config
+
 rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
 %.c: %.y
