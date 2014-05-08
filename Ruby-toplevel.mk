@@ -1,5 +1,5 @@
 versions := *
-override versions := $(patsubst %/,%,$(dir $(wildcard $(addsuffix /GNUmakefile,$(versions)) $(addsuffix /src/GNUmakefile,$(versions)))))
+override versions := $(patsubst %/,%,$(dir $(wildcard $(addsuffix /Makefile,$(versions)) $(addsuffix /src/Makefile,$(versions)))))
 goals := all $(filter-out %/all $(shell sed '/^[a-zA-Z_][-a-zA-Z0-9_]*:/!d;s/:.*//;s:.*:& %/&:' $(MAKEFILE_LIST)),$(MAKECMDGOALS))
 unexport versions goals
 svn_versions := $(dir $(wildcard $(addsuffix /.svn,$(versions))))
