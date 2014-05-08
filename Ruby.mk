@@ -55,10 +55,11 @@ UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
 
-SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[chy])\
+SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
 	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
 	$(call git_srcs,*.def) $(call git_srcs,missing/) \
-        $(call git_srcs,enc/) $(call git_srcs,win32/)
+	$(call git_srcs,enc/) $(call git_srcs,win32/) \
+	$(call git_srcs,*.h)
 SRCS := $(wildcard $(SRCS))
   ifneq ($(if $(wildcard .git/svn),$(shell test -L .git/svn || echo .git/svn)),)
 VCS = $(GIT_SVN)
