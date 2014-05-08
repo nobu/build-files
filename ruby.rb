@@ -169,4 +169,4 @@ ENV["DYLD_PRINT_LIBRARIES"] = "1" if print_libraries
 ENV.update(envs)
 
 command << ruby
-exec *command.concat(ARGV)
+exec(*command.concat(ARGV))
