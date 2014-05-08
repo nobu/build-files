@@ -8,8 +8,6 @@ while arg = ARGV[0]
   arg, value = $1, $2
   re = Regexp.new('\A'+arg.gsub(/\w+\b/, '\&\\w*')+'\z', "i")
   case
-  when re =~ "debug"
-    debug = true
   when re =~ "srcdir"
     srcdir = value
   when re =~ "archdir"
