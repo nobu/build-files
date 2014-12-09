@@ -1,0 +1,289 @@
+#!/bin/bash --noprofile
+
+unset LC_ALL
+export LC_TIME=C
+export TZ=JST-9
+
+abort() {
+    echo "${0##*/}: $*" 1>&2
+    exit 1
+}
+
+unset fullname mailaddr
+LOGFILE=ChangeLog
+nocommit=
+nochangelog=
+logfile=
+dcommit=yes
+keeplog=no
+gitlog=
+amend=
+tmpdir=
+trap '[ -d "$tmpdir" ] && rm -rf "$tmpdir"' 0 2
+
+until [ "$#" = 0 ]; do
+    arg="$1"
+    case "$arg" in
+      --amend)
+	amend=--amend;;
+      --git-log)
+	gitlog=yes
+	tmpdir=`mktemp -d ${TMPDIR-/tmp}/vcommit.XXXXXXXXXX`
+	logfile=`git format-patch -1 -o "$tmpdir"`;;
+      --no-commit)
+	nocommit=1;;
+      --no-log)
+	nochangelog=1;;
+      --git-only)
+	dcommit=no;;
+      --log-file=*)
+	logfile="${1#*=}";;
+      --log-file)
+	shift
+	[ "$#" = 0 ] && abort "missing argument for $arg"
+	logfile="$1";;
+      --full-name=*|--fullname=*)
+	fullname="${arg#*=}";;
+      --full-name|--fullname)
+	shift
+	[ "$#" = 0 ] && abort "missing argument for $arg"
+	fullname="${arg#*=}";;
+      --mail-address=*|--mail-addr=*|--mailaddr=*|--mail=*)
+	mailaddr="${arg#*=}";;
+      --mail-address|--mail-addr|--mailaddr|--mail)
+	[ "$#" = 0 ] && abort "missing argument for $arg"
+	mailaddr="${arg#*=}";;
+      --full-name|--fullname)
+	shift
+	[ "$#" = 0 ] && abort "missing argument for $arg"
+	fullname="${arg#*=}";;
+      --keep-log)
+	keeplog=yes;;
+      --)
+	shift
+	break;;
+      --*)
+	break;;
+      -*)
+	arg1=1 arg="${arg#-}"
+	until [ -z "$arg" ]; do
+	    opt="${arg:0:1}" arg="${arg:1}"
+	    case "$opt" in
+	      n)
+		nocommit=1;;
+	      l)
+		nochangelog=1;;
+	      g)
+		dcommit=no;;
+	      F)
+		logfile="$arg"
+		if [ -z "$logfile" ]; then
+		    shift
+		    [ "$#" = 0 ] && abort "missing argument for -$opt"
+		    logfile="$1"
+		fi
+		break;;
+	      C)
+		logfile="${logfile:+$PWD/$logfile}"
+		if [ -z "$arg" ]; then
+		    shift
+		    [ "$#" = 0 ] && abort "missing argument for -$opt"
+		    cd "$1"
+		else
+		    cd "$arg"
+		fi
+		break;;
+	      k)
+		keeplog=yes
+		break;;
+	      *)
+		[ $arg1 ] || abort "unknown switch -$opt"
+		break 2
+		;;
+	    esac
+	    arg1=
+	done;;
+      *)
+	break
+	;;
+    esac
+    shift
+done
+
+update_created() {
+    declare time="$1" f
+    shift
+    [ "$#" = 0 ] && return
+    set -- `grep -r -l '^ *created at: .*' "$@"`
+    [ "$#" = 0 ] && return
+    for f; do
+	mv "$f" "$f"~
+	sed 's|^\( *created at: \).*|\1'"$time|" "$f"~ > "$f"
+    done
+}
+
+if [ -d .git ]; then
+    vcs=git
+elif [ -d .svn -o -d ../.svn ]; then
+    vcs=svn
+else
+    echo "$0: unknown vcs"
+    exit 1
+fi
+if test -z "${logfile}"; then
+    if test -f change.log; then
+	logfile=change.log
+    else
+	logfile=log
+    fi
+fi
+if [ x"$fullname" = x ]; then
+    if [ x"$vcs" = xgit ]; then
+	fullname=`git log -n1 --format=%aN`
+    else
+	fullname=${FULLNAME:-`sed -n /"^$USER:"/'s/^[^:]*:[^:]*:[^:]*:[^:]*:\([^,:]*\).*/\1/p' /etc/passwd`}
+    fi
+fi
+if [ x"$mailaddr" = x ]; then
+    if [ x"$vcs" = xgit ]; then
+	mailaddr=`git log -n1 --format=%aE`
+    else
+	mailaddr=${MAILADDR:-`sed -n '/^default/s/.*password //p' ~/.netrc`}
+    fi
+fi
+: ${fullname:?No FULLNAME} ${mailaddr:?No MAILADDR}
+export GIT_AUTHOR_NAME="$fullname"
+export GIT_AUTHOR_EMAIL="$mailaddr"
+
+prepend_changelog() {
+    declare file="$1"
+    declare line
+
+    read line < "$file"
+    case "$line" in
+	[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*)
+	    time="`date +%Y-%m-%d`"
+	    [ -n "$nochangelog" -o -f "$file.orig" ] ||
+	    sed "1{/$time  $fullname  /{N;/\n$/d;D;};}" "$file" > "$file.orig"
+	    ;;
+	*)
+	    time="`date +%c`"
+	    [ -n "$nochangelog" -o -f "$file.orig" ] ||
+	    mv "$file" "$file.orig"
+	    ;;
+    esac
+
+    {
+        ruby -e '
+	class String
+	  def purify
+	    unicode_normalize(:nfd).
+	    encode("us-ascii", replace: "")
+	  end
+	end
+	h = ARGV.shift.purify
+	s = open(ARGV.shift) {|f|f.read}
+	orig = open(ARGV.shift) {|f|f.read}
+	output = ARGV.shift
+	s.sub!(/\Amerge.*\d:$/, "")
+	if log = s[/\AFrom .*^Subject: \[PATCH(?: \d*\/\d*)?\] *(.*)^---$/m, 1]
+	  if log.gsub!(/\A[ \t]*([^*].*)\n(.+\n)*\n+/, "")
+	    puts $1
+	    puts
+	  end
+	  log.gsub!(/^ /, "") if /\A \*/ =~ log
+	else
+	  (log = s).sub!(/^\f.*/m, "")
+	end
+	log.gsub!(/[ \t]+$/, "")
+	log.gsub!(/^ *(?=\t)/, "")
+	log.gsub!(/(\S\n)(?=\*)/m, "\\1\n")
+	puts log.gsub(/^\n/, "")
+	log.gsub!(/^(?!\t|$)/, "\t")
+	log.sub!(/\n*\Z/m, "\n")
+	log = log.purify
+	open(output, "w") {|f|f.puts h, "", log, "", orig}
+	' "$time  $fullname  <$mailaddr>" \
+	"$logfile" "$file.orig" "$file"
+    } > changelog.tmp
+}
+
+if [ "$#" = 0 ]; then
+    if [ "${gitlog}" = yes ]; then
+	set ChangeLog
+	: ${amend:=--amend}
+    else
+	set */
+    fi
+fi
+
+changelogs=()
+for d; do
+    d="${d%/}"
+    if [ -d "$d" ]; then
+	[ -f "$d"/$LOGFILE ] || continue
+    elif [ -f "$d" ]; then
+	[ "${d##*/}" = $LOGFILE ] || continue
+	case "$d" in
+	    */*) d="${d%/*}";;
+	    *) d=.;;
+	esac
+    else
+	continue
+    fi
+    for c in "${changelogs[@]%/*}"; do
+	case "${d}" in
+	    "${c#./}/"*) continue 2;;
+	esac
+    done
+    prepend_changelog "$d/$LOGFILE"
+    changelogs=("${changelogs[@]}" "$d/$LOGFILE.orig")
+    [ "$d" = . ] && break
+done
+if [ ${#changelogs[0]} = 0 ]; then
+    [ -f $LOGFILE ] || { echo "${0##*/}: nothing to commit" 1>&2; exit 1; }
+    prepend_changelog "$LOGFILE"
+    changelogs=($LOGFILE.orig)
+fi
+
+case "$vcs" in
+svn)
+    added=`svn status "$@" | sed -n 's/^A     //p'`
+    update_created "$time" $added
+    ;;
+git*) git add "$@";;
+esac
+if [ $nocommit ]; then
+    echo $vcs commit -F "$logfile" "$@"
+    ${tmpdir:+rm -fr "$tmpdir"}
+    cat changelog.tmp
+    [ -d .git/svn -a "$dcommit" = yes ] && echo git svn dcommit "$@"
+    if test x"$PAGER" != x -a -t; then
+	case "$vcs" in
+	    svn)
+		exec $PAGER +/'^Index:.*' < <($vcs diff --no-diff-deleted "$@")
+		;;
+	    git*)
+		exec $vcs diff --staged "$@"
+		;;
+	esac
+    fi
+    exit
+fi
+if $vcs commit -F changelog.tmp ${amend} "$@"; then
+    if ! [ -d .git/svn -a "$dcommit" = yes ] || git svn dcommit "$@"; then
+	if [ $keeplog != yes ]; then
+	    if [ -z "$tmpdir" ]; then
+		mv -f "$logfile" "$logfile"~
+	    else
+		rm -f "$logfile"
+		rmdir "$tmpdir"
+		tmpdir=
+	    fi
+	fi
+    fi
+    [ "$vcs" = "svn" ] && $vcs up
+    exec rm -fr changelog.tmp revision.h "${changelogs[@]}" ${tmpdir:+"$tmpdir"}
+else
+    [ -f $LOGFILE.orig ] && mv -f $LOGFILE.orig $LOGFILE
+fi
