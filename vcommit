@@ -199,6 +199,7 @@ prepend_changelog() {
 	log.gsub!(/^ *(?=\t)/, "")
 	log.gsub!(/(\S\n)(?=\*)/m, "\\1\n")
 	puts log.gsub(/^\n/, "")
+	log.sub!(/\s*\[ci\s+skip\]\s*\Z/im, "")
 	log.gsub!(/^(?!\t|$)/, "\t")
 	log.sub!(/\n*\Z/m, "\n")
 	log = log.purify
