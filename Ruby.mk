@@ -41,7 +41,8 @@ UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 VCS = $(SVN)
 SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,*.ci) $(call svn_srcs,insns.def) \
-	$(call svn_srcs,*.def) $(call svn_srcs,missing/) \
+	$(call svn_srcs,*.def) $(call svn_srcs,ccan) \
+	$(call svn_srcs,missing/) \
 	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
 else ifneq ($(wildcard $(srcdir)/.git),)
@@ -57,7 +58,8 @@ endif
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
 	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
-	$(call git_srcs,*.def) $(call git_srcs,missing/) \
+	$(call git_srcs,*.def) $(call git_srcs,ccan) \
+	$(call git_srcs,missing/) \
 	$(call git_srcs,enc/) $(call git_srcs,win32/) \
 	$(call git_srcs,*.h)
 SRCS := $(wildcard $(SRCS))
