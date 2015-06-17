@@ -340,7 +340,9 @@ lex.c: $(KEYWORDS)
 ripper_hdrdir = $(if $(wildcard include/ruby/ruby.h),top_srcdir,hdrdir)
 ripper: .force
 	$(CMDSTARTING)
-	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. RUBY="$(RUBY)"
+	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend \
+		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. \
+		RUBY="$(RUBY)" PATH_SEPARATOR=:
 	$(FINISHED)
 
 revision.h: .force
