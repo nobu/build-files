@@ -129,8 +129,8 @@ endif
 CMDVARS := $(filter-out subdirs=%,$(-*-command-variables-*- :=))
 MFLAGS := $(if $(EXTOUT),EXTOUT=$(EXTOUT)) $(if $(RDOCOUT),RDOCOUT=$(RDOCOUT))
 makeflags := $(patsubst -w%,-%,-$(filter-out --%,$(MAKEFLAGS)))
-make-default = $(if $(nonexec),,$(make-precommand) $(if $(wildcard $(1)/.env),$(1)/.env -C $(1))) \
-	$(MAKE) $(if $(if $(nonexec),,$(wildcard $(1)/.env)),,-C $(1))
+make-default = $(if $(nonexec),,$(make-precommand)) \
+	$(MAKE) -C $(1)
 config-default = cd $(@D); \
 	sh $(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/$(CONFIGURE) \
 	   $(if $(wildcard $@), $(shell sed -n 's/^s,@configure_args@,\(.*\),;t t$$/\1/p' $@))
@@ -138,9 +138,7 @@ config-default = cd $(@D); \
 nmake := $(shell which nmake 2>&1)
 bcc32 := $(shell which bcc32 2>&1)
 ifneq ($(nmake),)
-make-mswin32 = $(if $(nonexec),,@echo $(call make-default,$(1));) cd $(1); unset MAKEFLAGS; \
-	       $(strip exec $(if $(nonexec),,$(make-precommand)) ./.env nmake -l $(makeflags) $(MFLAGS))
-#make-mswin32 = nmake -C"$(1)" -l $(filter-out --%,$(MAKEFLAGS)) $(MFLAGS)
+make-mswin32 = nmake -C"$(1)" -l $(filter-out subdirs=% --%,$(MAKEFLAGS)) $(MFLAGS)
 configure-mswin32 = win32/Makefile.sub
 config-mswin32 = cd $(@D); \
 	$(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/win32/configure.bat
@@ -234,7 +232,7 @@ $(1)/Makefile:;
 ,
 $(1)/config.status: $(CONFIGURE)
 $(1)/Makefile: $$(configure-default)
-	cd $$(@D); $(if $(wildcard $(1)/.env),./.env) sh config.status
+	cd $$(@D) && exec sh config.status
 )
 
 $(1)/config.status: make-precommand += time
