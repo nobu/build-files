@@ -166,7 +166,7 @@ else
 subdirs := $(wildcard $(subdirs))
 endif
 subdirs := $(sort $(patsubst %/,%,$(dir $(subdirs))))
-ostype = $(word 2,$(subst -, ,$1))
+ostype = $(word 2,$(subst ., ,$(subst _, ,$(subst -, ,$1))))
 target = $(call ostype,$(@D))
 
 BISON = bison
