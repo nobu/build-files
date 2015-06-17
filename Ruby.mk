@@ -288,7 +288,7 @@ rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 configure: configure.in
 	+$(AUTOCONF)
 
-prereq-targets := $(if $(common.mk),$(shell grep -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
+prereq-targets := $(if $(common.mk),$(shell grep -e '^incs:' -e '^srcs:' -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,') \
 		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' Makefile.in))
 prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
