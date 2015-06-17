@@ -160,6 +160,7 @@ RM = rm -f
 
 ifndef subdirs
 subdirs := $(wildcard */Makefile .[^.]*/Makefile)
+subdirs += $(if $(subdirs),,$(wildcard .*-*/Makefile))
 subdirs += $(filter-out djgpp/config.status,$(wildcard */config.status .[^.]*/config.status))
 else
 subdirs := $(wildcard $(subdirs))
