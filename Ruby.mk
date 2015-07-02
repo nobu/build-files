@@ -322,7 +322,7 @@ stash-save:
 stash-pop:
 	$(in-srcdir) $(GIT) stash pop
 
-up: up-remote up-local .force
+up: up-remote update-rubyspec up-local .force
 .do-up-remote: $(before-up) .do-up $(after-up) .force
 
 up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
