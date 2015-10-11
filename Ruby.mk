@@ -265,7 +265,6 @@ $(foreach goal,$(phony-targets) $(filter-out $(subdir-filter) $(phony-filter),$(
 $(foreach goal,$(phony-targets) $(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
 
 prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
-	@-sync
 
 resolved:
 	@PWD= resolve-conflict
@@ -428,7 +427,6 @@ check: prereq .pre-check test test-all .post-check .force
 test: prereq .pre-test $(subdirs:=/test) .post-test .force
 test-all: prereq .pre-test-all $(subdirs:=/test-all) .post-test-all .force
 test-rubyspec: prereq .pre-test-rubyspec $(subdirs:=/test-rubyspec) .post-test-rubyspec .force
-test test-all:; sync
 try: $(DEFAULTARCH)/miniruby try.rb
 	$(DEFAULTARCH)/miniruby try.rb
 
