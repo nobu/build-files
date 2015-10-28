@@ -104,9 +104,15 @@ rescue Errno::EINVAL
   abs_archdir = File.extern_path(abs_archdir)
 end
 
-ruby = File.basename(__FILE__).sub(/ruby/, config['ruby_install_name'])
-ruby = File.expand_path(ruby+config['EXEEXT'], abs_archdir)
-File.exist?(ruby) or abort "#{ruby} is not found."
+ruby = ENV["RUBY"]
+begin
+  break if ruby and File.exist?(ruby)
+  ruby = File.expand_path("ruby-runner"+config['EXEEXT'], abs_archdir)
+  break if File.exist?(ruby)
+  ruby = File.basename(__FILE__).sub(/ruby/, config['ruby_install_name'])
+  ruby = File.expand_path(ruby+config['EXEEXT'], abs_archdir)
+  break if File.exist?(ruby)
+end while abort("#{ruby} is not found.")
 
 libs = [abs_archdir]
 if extout
