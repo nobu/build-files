@@ -52,7 +52,7 @@ $(backup): $(gitdir) gc
 
 gc: .force
 	du -s $(gitdir)
-	git gc --prune
+	git gc
 	du -s $(gitdir)
 
 .PHONY: .force fetch rebase branch backup gc
