@@ -80,7 +80,7 @@ begin
   end
 end while false
 
-config.sub!(/^(\s*)RUBY_VERSION\s*==.*(\sor\s*)$/, '\1true\2')
+config.sub!(/^(\s*)RUBY_VERSION\b.*(\sor\s*)$/, '\1true\2')
 config = Module.new {
   module_eval(config, conffile)
   RbConfig = Config unless const_defined?(:RbConfig)
