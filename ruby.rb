@@ -167,4 +167,6 @@ ENV["DYLD_PRINT_LIBRARIES"] = "1" if print_libraries
 ENV.update(envs)
 
 command << ruby
-exec(*command.concat(ARGV))
+command.concat(ARGV)
+command.push(:close_others => false)
+exec(*command)
