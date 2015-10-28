@@ -11,7 +11,7 @@ while arg = ARGV[0]
   when re =~ "srcdir"
     srcdir = value
   when re =~ "archdir"
-    archdir = value
+    archdir = value || (ARGV.shift && ARGV[0])
   when re =~ "cpu"
     command.concat(%w[arch -arch]) << value
   when re =~ "extout"
