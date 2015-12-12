@@ -419,9 +419,11 @@ post-install-local: $(subdirs:=/post-install-local)
 pre-install-ext: $(subdirs:=/pre-install-ext)
 post-install-ext: $(subdirs:=/post-install-ext)
 
+exam: prereq .pre-exam test test-all test-rubyspec .post-exam .force
 check: prereq .pre-check test test-all .post-check .force
 test: prereq .pre-test $(subdirs:=/test) .post-test .force
 test-all: prereq .pre-test-all $(subdirs:=/test-all) .post-test-all .force
+test-rubyspec: prereq .pre-test-rubyspec $(subdirs:=/test-rubyspec) .post-test-rubyspec .force
 test test-all:; sync
 try: $(DEFAULTARCH)/miniruby try.rb
 	$(DEFAULTARCH)/miniruby try.rb
