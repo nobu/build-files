@@ -362,7 +362,7 @@ $(srcdir_prefix)revision.h:
 endif
 
 help: .force
-	@$(MAKE) -f common.mk $@
+	@$(MAKE) -f common.mk MESSAGE_BEGIN='@for line in' MESSAGE_END='; do echo "$$$$line"; done' $@
 
 update-prereq: .force
 	$(MAKE) -C $(patsubst file:%,%,$(ORIGIN_URL)) up
