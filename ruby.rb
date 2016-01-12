@@ -48,6 +48,7 @@ end
 
 srcdir ||= File.dirname(__FILE__)
 rbconf = "rbconfig.rb"
+archdir ||= (ARGV.shift if ARGV[0] && File.exist?(File.join(ARGV[0], rbconf)))
 arch =
   if host = ENV["HOSTTYPE"] and os = ENV["OSTYPE"]
     "#{host}-#{os.sub(/(?:[.\d]+|-gnu)\z/, '')}"
