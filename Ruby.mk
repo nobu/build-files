@@ -101,6 +101,10 @@ $(if $(filter $(subst p,,$(mflags)),$(mflags)),,$(eval print-database := t))\
 $(if $(filter $(subst k,,$(mflags)),$(mflags)),,$(eval keep-going := t))\
 )
 
+RUBY_PROGRAM_VERSION := $(shell sed -n 's/^\#define RUBY_VERSION "\([0-9][.0-9]*\)"/\1/p' version.h)
+MAJOR := $(word 1,$(subst ., ,$(RUBY_PROGRAM_VERSION)))
+MINOR := $(word 2,$(subst ., ,$(RUBY_PROGRAM_VERSION)))
+
 ifeq ($(TERM),dumb)
 tty :=
 else
@@ -305,7 +309,7 @@ $(prereq-targets):
 	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
-	PATH_SEPARATOR=: CROSS_COMPILING=no \
+	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out revision.h,$@),prereq)
 endif
