@@ -101,7 +101,7 @@ $(if $(filter $(subst p,,$(mflags)),$(mflags)),,$(eval print-database := t))\
 $(if $(filter $(subst k,,$(mflags)),$(mflags)),,$(eval keep-going := t))\
 )
 
-RUBY_PROGRAM_VERSION := $(shell sed -n 's/^\#define RUBY_VERSION "\([0-9][.0-9]*\)"/\1/p' version.h)
+RUBY_PROGRAM_VERSION := $(shell sed -n 's/^\#define RUBY_VERSION "\([0-9][.0-9]*\)"/\1/p' $(srcdir_prefix)version.h)
 MAJOR := $(word 1,$(subst ., ,$(RUBY_PROGRAM_VERSION)))
 MINOR := $(word 2,$(subst ., ,$(RUBY_PROGRAM_VERSION)))
 
@@ -179,7 +179,7 @@ CONFIGURE = $(CONFIGURE_IN:.in=)
 PARSE_Y := $(wildcard parse.y)
 KEYWORDS := $(call or,$(wildcard defs/keywords),$(wildcard keywords))
 LEX_C := $(if $(KEYWORDS),lex.c)
-ID_H := $(shell sed '/^id\.h:/!d;s/:.*//p' common.mk)
+ID_H := $(shell sed '/^id\.h:/!d;s/:.*//p' $(common.mk))
 RIPPER := $(if $(wildcard ext/ripper/depend),ripper)
 PREREQ = .force $(CONFIGURE) $(PARSE_Y:.y=.c) $(LEX_C) $(ID_H) revision.h .revision.time
 ifndef RUBY
@@ -282,8 +282,8 @@ reconfig: .pre-config $(subdirs:=/reconfig) .post-config
 rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
 %.c: %.y
-	+$(in-srcdir) { \
-	  sed '/^@/d' Makefile.in; \
+	+{ \
+	  sed '/^@/d' $(srcdir_prefix)Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
 	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
@@ -294,15 +294,15 @@ configure: configure.in
 
 prereq-targets := $(if $(common.mk),$(shell grep -e '^incs:' -e '^srcs:' -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
 		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,') \
-		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' Makefile.in))
+		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(srcdir_prefix)Makefile.in))
 prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
 
 ifneq ($(prereq-targets),)
 $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
 
 $(prereq-targets):
-	@$(in-srcdir) { \
-	  sed 's/@[A-Z][A-Z_0-9]*@//g' Makefile.in; \
+	@{ \
+	  sed 's/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(srcdir_prefix)Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
 	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
