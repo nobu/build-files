@@ -286,7 +286,7 @@ rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 	  sed '/^@/d' $(srcdir_prefix)Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
-	$(MAKE) -f - srcdir=. CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
+	$(MAKE) -f - srcdir=$(srcdir) CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
 	$(CMDFINISHED)
 
 configure: configure.in
@@ -305,7 +305,7 @@ $(prereq-targets):
 	  sed 's/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(srcdir_prefix)Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
-	$(MAKE) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
+	$(MAKE) -f - srcdir=$(srcdir) VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
@@ -345,7 +345,7 @@ ripper_hdrdir = $(if $(wildcard include/ruby/ruby.h),top_srcdir,hdrdir)
 ripper: .force
 	$(CMDSTARTING)
 	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend \
-		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. \
+		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=$(srcdir) \
 		RUBY="$(RUBY)" PATH_SEPARATOR=:
 	$(FINISHED)
 
