@@ -207,9 +207,13 @@ goals := $(filter-out $(localgoals) $(PREREQ),$(call or,$(MAKECMDGOALS),all))
 cmdgoals := $(filter-out $(subdirs:=/%),$(goals))
 subdir-goals := $(filter $(subdirs:=/%),$(goals))
 
+.pre-%/%:
+	$(call STARTING,$*)
 .pre-%:
 	$(call STARTING,$*)
 .post-%:
+	$(call FINISHED,$*)
+.post-%/%:
 	$(call FINISHED,$*)
 
 all:
