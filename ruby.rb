@@ -25,7 +25,7 @@ while arg = ARGV[0]
       require 'shellwords'
       command.unshift(*Shellwords.shellwords(value))
     else
-      command.unshift("gdb")
+      command.unshift("gdb", "-q")
     end
   when re =~ "rubyopt"
     rubyopt = value
