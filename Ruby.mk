@@ -66,6 +66,7 @@ SRCS := $(wildcard $(SRCS))
   ifneq ($(if $(wildcard .git/svn),$(shell test -L .git/svn || echo .git/svn)),)
 VCS = $(GIT_SVN)
 VCSUP = $(VCS) rebase $(gitsvnup-options)
+VCSCOMMIT = $(VCS) svn dcommit
 before-up := $(shell git status --porcelain | sed '/^?/d;s/.*/stash-save/;q')
 after-up := $(before-up:-save=-pop)
 #  else ifeq ($(patsubst +%,+,$(shell git config remote.origin.fetch)),+)
@@ -79,6 +80,7 @@ VCSUP = $(VCS) $(git-up)
 POST_UP1 = $(GIT) pull --no-edit --rebase
 POST_UP2 = $(GIT_SVN) rebase
     endif
+VCSCOMMIT = $(VCS) push
   endif
 else ifneq ($(wildcard $(srcdir)/CVS/Entries),)
 VCS = $(CVS)
@@ -433,6 +435,9 @@ test-all: prereq .pre-test-all $(subdirs:=/test-all) .post-test-all .force
 test-rubyspec: prereq .pre-test-rubyspec $(subdirs:=/test-rubyspec) .post-test-rubyspec .force
 try: $(DEFAULTARCH)/miniruby try.rb
 	$(DEFAULTARCH)/miniruby try.rb
+commit:
+	$(VCSCOMMIT)
+shit: exam commit
 
 ifeq ($(tty),)
 oneline = echo "$(2)"; exec $(1)
