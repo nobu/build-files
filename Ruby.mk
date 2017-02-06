@@ -25,14 +25,14 @@ endif
 
 or = $(if $(1),$(1),$(2))
 
-CVS = cvs -f
-SVN = svn
-GIT = git
-GIT_SVN = $(GIT) svn
+CVS = $(if $(shell command -v cvs 2>&-),cvs -f)
+SVN = $(if $(shell command -v svn 2>&-),svn)
+GIT = $(if $(shell command -v git 2>&-),git)
+GIT_SVN = $(if $(GIT),$(GIT) -C $(srcdir) svn)
 svn-up = update
 svn-up-options = --accept postpone
 git-up = pull --no-edit
-ifneq ($(wildcard $(srcdir)/.svn/entries),)
+ifneq ($(and $(SVN),$(wildcard $(srcdir)/.svn/entries)),)
 UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 	sed -n \
 	-e 's,^URL:.*/branches/\([^/]*\)$$,\#define RUBY_BRANCH_NAME "\1",p' \
@@ -45,7 +45,7 @@ SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,missing/) \
 	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
-else ifneq ($(wildcard $(srcdir)/.git),)
+else ifneq ($(and $(GIT),$(wildcard $(srcdir)/.git)),)
 UPDATE_REVISION = $(in-srcdir) git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
 	sed -e '$$!d' -e '/ *git-svn-id: */!d' -e 's///' \
 	-e 's,.*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
@@ -82,7 +82,7 @@ POST_UP2 = $(GIT_SVN) rebase
     endif
 VCSCOMMIT = $(VCS) push
   endif
-else ifneq ($(wildcard $(srcdir)/CVS/Entries),)
+else ifneq ($(and $(CVS),$(wildcard $(srcdir)/CVS/Entries)),)
 VCS = $(CVS)
 SRCS := $(call cvs_srcs) $(call cvs_srcs,missing/) $(call cvs_srcs,win32/)
 else
@@ -113,10 +113,7 @@ else
 tty := $(shell sh -c "test -t 2 && echo tty")
 endif
 
-SETTITLE := $(call or,\
-    $(if $(tty),$(shell sh -c "type settitle 2>/dev/null | sed 's/^.* is //'"),\
-		$(shell echo ': -*- compilation -*-' 1>&2)),\
-    :)
+SETTITLE := $(if $(tty),$(shell command -v settitle 2>&-),echo ": -*- compilation -*-")
 define MESSAGE
 $(if $(nonexec),,@$(SETTITLE) making $(if $(2),$(2),$@))
 $(if $(nonexec),,@echo ")<=== $(1) $(if $(2),$(2),$@) ===>$(if $(nonexec),,")
@@ -141,11 +138,11 @@ config-default = cd $(@D); \
 	sh $(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/$(CONFIGURE) \
 	   $(if $(wildcard $@), $(shell sed -n 's/^s,@configure_args@,\(.*\),;t t$$/\1/p' $@))
 
-nmake := $(shell which nmake 2>&1)
-bcc32 := $(shell which bcc32 2>&1)
+nmake := $(shell command -v nmake 2>&-)
+bcc32 := $(shell command -v bcc32 2>&-)
 ifneq ($(nmake),)
-make-mswin32 = nmake -C"$(1)" -l $(filter-out subdirs=% --%,$(MAKEFLAGS)) $(MFLAGS)
-configure-mswin32 = win32/Makefile.sub
+make-mswin32 = nmake -C"$(1)" -l$(filter-out subdirs=% --%,$(MAKEFLAGS))
+configure-mswin32 = $(srcdir_prefix)win32/Makefile.sub
 config-mswin32 = cd $(@D); \
 	$(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/win32/configure.bat
 endif
@@ -176,13 +173,13 @@ ostype = $(word 2,$(subst ., ,$(subst _, ,$(subst -, ,$1))))
 target = $(call ostype,$(@D))
 
 BISON = bison
-CONFIGURE_IN := $(wildcard configure.in)
+CONFIGURE_IN := $(wildcard $(srcdir_prefix)configure.in)
 CONFIGURE = $(CONFIGURE_IN:.in=)
-PARSE_Y := $(wildcard parse.y)
-KEYWORDS := $(call or,$(wildcard defs/keywords),$(wildcard keywords))
-LEX_C := $(if $(KEYWORDS),lex.c)
-ID_H := $(shell sed '/^id\.h:/!d;s/:.*//p' $(common.mk))
-RIPPER := $(if $(wildcard ext/ripper/depend),ripper)
+PARSE_Y := $(wildcard $(srcdir_prefix)parse.y)
+KEYWORDS := $(call or,$(wildcard $(srcdir_prefix)defs/keywords),$(wildcard $(srcdir_prefix)keywords))
+LEX_C := $(if $(KEYWORDS),$(srcdir_prefix)lex.c)
+ID_H := $(if $(shell grep '/^id\.h:/' $(common.mk)),$(srcdir_prefix)$(ID_H))
+RIPPER := $(if $(wildcard $(srcdir_prefix)ext/ripper/depend),ripper)
 PREREQ = .force $(CONFIGURE) $(PARSE_Y:.y=.c) $(LEX_C) $(ID_H) revision.h .revision.time
 ifndef RUBY
 NATIVEARCH := $(patsubst %/Makefile,%,$(shell grep -l '^PREP *= *miniruby' $(subdirs:=/Makefile) /dev/null))
@@ -196,7 +193,7 @@ endif
 
 PAGER ?= less
 MAKEFILE_LIST := $(sort $(wildcard $(MAKEFILE_LIST) GNUmakefile Makefile makefile Makefile.in common.mk $(MAKEFILES)))
-EXTOUT ?= ../ext
+EXTOUT ?= $(if $(filter .,$(srcdir)),.)./ext
 RDOCOUT ?= $(EXTOUT)/rdoc
 RBCONFIG ?= ./.rbconfig.time
 export EXTOUT RDOCOUT RBCONFIG
@@ -268,7 +265,7 @@ subdir-filter = $(subdirs:=/%) $(localgoals) $(PREREQ)
 $(foreach goal,$(phony-targets) $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$(eval $(value goal): prereq))
 $(foreach goal,$(phony-targets) $(filter-out $(subdirs:=/%) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): .pre-$(value goal)))
 $(foreach goal,$(phony-targets) $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
-$(foreach goal,$(phony-targets) $(filter-out $(phony-filter),$(cmdgoals)),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
+$(foreach goal,$(sort $(phony-targets) $(filter-out $(phony-filter),$(cmdgoals))),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
 
 prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
 
@@ -285,7 +282,7 @@ config: .pre-config $(subdirs:=/config.status) .post-config
 
 reconfig: .pre-config $(subdirs:=/reconfig) .post-config
 
-rbconfig: prereq .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
+rbconfig: $(if $(VCS),prereq) .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
 %.c: %.y
 	+{ \
@@ -303,6 +300,7 @@ prereq-targets := $(if $(common.mk),$(shell grep -e '^incs:' -e '^srcs:' -e '^pr
 		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(srcdir_prefix)Makefile.in))
 prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
 
+ifneq ($(VCS),)
 ifneq ($(prereq-targets),)
 $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
 
@@ -340,6 +338,7 @@ ifneq ($(UPDATE_PREREQ_LOCAL),)
 up-local: .do-up-remote
 endif
 up-local: prereq .force
+endif
 
 .do-prereq:
 
@@ -347,11 +346,11 @@ host-miniruby: $(MINIRUBY)
 
 lex.c: $(KEYWORDS)
 
-ripper_hdrdir = $(if $(wildcard include/ruby/ruby.h),top_srcdir,hdrdir)
+ripper_hdrdir = $(if $(wildcard $(srcdir_prefix)include/ruby/ruby.h),top_srcdir,hdrdir)
 ripper: .force
 	$(CMDSTARTING)
-	$(if $(TOPMAKE),$(MAKE),$(MAKE)) -C ext/ripper -f depend \
-		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=$(srcdir) \
+	$(MAKE) -C $(srcdir_prefix)ext/ripper -f depend \
+		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. \
 		RUBY="$(RUBY)" PATH_SEPARATOR=:
 	$(FINISHED)
 
