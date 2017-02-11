@@ -141,7 +141,9 @@ config-default = cd $(@D); \
 nmake := $(shell command -v nmake 2>&-)
 bcc32 := $(shell command -v bcc32 2>&-)
 ifneq ($(nmake),)
-make-mswin32 = nmake -C"$(1)" -l$(filter-out subdirs=% --%,$(MAKEFLAGS))
+make-mswin32 = cd "$(1)" && \
+	$(if $(wildcard "$(1)/run.cmd"),./run.cmd) nmake -l \
+	$(if $(filter-out %=% -%,$(firstword $(MAKEFLAGS))),-)$(filter-out subdirs=% -j% --%,$(MAKEFLAGS))
 configure-mswin32 = $(srcdir_prefix)win32/Makefile.sub
 config-mswin32 = cd $(@D); \
 	$(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/win32/configure.bat
