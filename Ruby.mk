@@ -113,7 +113,10 @@ else
 tty := $(shell sh -c "test -t 2 && echo tty")
 endif
 
-SETTITLE := $(if $(tty),$(shell command -v settitle 2>&-),echo ": -*- compilation -*-")
+SETTITLE := $(if $(tty),$(shell command -v settitle 2>&-))
+ifeq ($(SETTITLE),)
+SETTITLE := echo ": -*- compilation -*-"
+endif
 define MESSAGE
 $(if $(nonexec),,@$(SETTITLE) making $(if $(2),$(2),$@))
 $(if $(nonexec),,@echo ")<=== $(1) $(if $(2),$(2),$@) ===>$(if $(nonexec),,")
