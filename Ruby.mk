@@ -245,7 +245,7 @@ $(1)/Makefile:;
 ,
 $(1)/config.status: $(CONFIGURE)
 $(1)/Makefile: $$(configure-default)
-	cd $$(@D) && exec sh config.status
+	+cd $$(@D) && exec sh config.status
 )
 
 $(1)/config.status: make-precommand += time
