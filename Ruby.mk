@@ -248,7 +248,7 @@ $(1)/Makefile: $$(configure-default)
 	+cd $$(@D) && exec sh config.status
 )
 
-$(1)/config.status: make-precommand += time
+# $(1)/config.status: make-precommand += time
 
 $(1)/config.status:
 	@$$(SETTITLE) making $$(@F) in $$(@D)
@@ -272,7 +272,14 @@ $(foreach goal,$(phony-targets) $(filter-out $(subdirs:=/%) $(phony-filter),$(MA
 $(foreach goal,$(phony-targets) $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
 $(foreach goal,$(sort $(phony-targets) $(filter-out $(phony-filter),$(cmdgoals))),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
 
-prereq: .pre-prereq .do-prereq $(PREREQ) config Makefile $(RIPPER) .post-prereq
+none:
+.PHONY: none
+
+prereq: .post-prereq
+
+.post-prereq: .do-prereq $(RIPPER)
+
+Makefile: $(PREREQ)
 
 resolved:
 	@PWD= resolve-conflict
@@ -281,11 +288,20 @@ resolved:
 
 Makefiles: Makefile
 
-Makefile: .pre-Makefile $(subdirs:=/Makefile) .post-Makefile
+Makefile: .pre-Makefile .post-Makefile
+$(subdirs:=/Makefile): .pre-Makefile
+.post-Makefile: $(subdirs:=/Makefile)
 
-config: .pre-config $(subdirs:=/config.status) .post-config
+.pre-Makefile: config
 
-reconfig: .pre-config $(subdirs:=/reconfig) .post-config
+config: .pre-config .post-config
+reconfig: .pre-config .post-reconfig
+
+.pre-config: prereq
+.post-config: .pre-config
+.post-reconfig: $(subdirs:=/reconfig)
+config.status: $(subdirs:=/config.status)
+$(subdirs:=/config.status): .post-config
 
 rbconfig: $(if $(VCS),prereq) .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post-rbconfig
 
@@ -319,10 +335,10 @@ $(prereq-targets):
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
-	$(if $(filter-out revision.h,$@),prereq)
+	$(if $(filter-out revision.h,$@),revision.h prereq)
 endif
 
-.do-up:
+.do-up: $(before-up)
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
@@ -335,9 +351,11 @@ stash-pop:
 	$(in-srcdir) $(GIT) stash pop
 
 up: up-remote update-rubyspec up-local .force
+$(if $(after-up),$(after-up),.do-up-remote): .do-up
 .do-up-remote: $(before-up) .do-up $(after-up) .force
 
 up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
+update-rubyspec: prereq
 
 ifneq ($(UPDATE_PREREQ_LOCAL),)
 up-local: .do-up-remote
@@ -345,12 +363,13 @@ endif
 up-local: prereq .force
 endif
 
-.do-prereq:
+.do-prereq: .pre-prereq
 
 host-miniruby: $(MINIRUBY)
 
 lex.c: $(KEYWORDS)
 
+ifeq ($(filter .do-srcs,$(prereq-targets)),)
 ripper_hdrdir = $(if $(wildcard $(srcdir_prefix)include/ruby/ruby.h),top_srcdir,hdrdir)
 ripper: .force
 	$(CMDSTARTING)
@@ -358,6 +377,9 @@ ripper: .force
 		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. \
 		RUBY="$(RUBY)" PATH_SEPARATOR=:
 	$(FINISHED)
+else
+ripper: .do-prereq
+endif
 
 revision.h: .force
 .revision.time: .force
