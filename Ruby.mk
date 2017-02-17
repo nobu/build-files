@@ -98,9 +98,9 @@ nonexec :=
 print-database :=
 keep-going :=
 $(foreach mflags,$(filter-out --%,$(filter -%,$(MFLAGS) $(MAKEFLAGS))),\
-$(if $(filter $(subst n,,$(mflags)),$(mflags)),,$(eval nonexec := t))\
-$(if $(filter $(subst p,,$(mflags)),$(mflags)),,$(eval print-database := t))\
-$(if $(filter $(subst k,,$(mflags)),$(mflags)),,$(eval keep-going := t))\
+$(if $(findstring n,$(mflags)),$(eval nonexec := t))\
+$(if $(findstring p,$(mflags)),$(eval print-database := t))\
+$(if $(findstring k,$(mflags)),$(eval keep-going := t))\
 )
 
 RUBY_PROGRAM_VERSION := $(shell sed -n 's/^\#define RUBY_VERSION "\([0-9][.0-9]*\)"/\1/p' $(srcdir_prefix)version.h)
