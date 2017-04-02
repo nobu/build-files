@@ -334,6 +334,7 @@ $(prereq-targets):
 	CHDIR=cd MAKEDIRS='mkdir -p' BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
+	CONFIGURE=configure \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out revision.h,$@),revision.h prereq)
 endif
