@@ -123,6 +123,7 @@ $(if $(nonexec),,@echo ")<=== $(1) $(if $(2),$(2),$@) ===>$(if $(nonexec),,")
 endef
 STARTING = $(call MESSAGE,{{{starting,$(1))
 FINISHED = $(call MESSAGE,}}}finished,$(1))
+MAKECMDGOALS := $(patsubst q,prereq,$(MAKECMDGOALS))
 CMDSTARTING = $(if $(filter $@,$(MAKECMDGOALS)),,$(call STARTING,$(1)))
 CMDFINISHED = $(if $(filter $@,$(MAKECMDGOALS)),$(call FINISHED,$(1)))
 
@@ -224,6 +225,8 @@ all:
 
 debug:
 	+$(MAKE) optflags=-O0
+
+q: prereq
 
 $(MINIRUBY): $(PREREQ) $(dir $(MINIRUBY))Makefile .pre-host-miniruby
 	@$(call SETTITLE,making $(@F) in $(@D))
