@@ -75,9 +75,9 @@ after-up := $(before-up:-save=-pop)
 #VCSUP = $(MAKE) -C "$(GIT_ORIGIN)" gitup-options=$(gitup-options) up
   else
 VCS = $(GIT)
-VCSUP = $(VCS) $(git-up)
+VCSUP = $(VCS) -C $(srcdir) $(git-up)
     ifneq ($(wildcard .git/svn),)
-POST_UP1 = $(GIT) pull --no-edit --rebase
+POST_UP1 = $(GIT) -C $(srcdir) pull --no-edit --rebase
 POST_UP2 = $(GIT_SVN) rebase
     endif
 VCSCOMMIT = $(VCS) push
