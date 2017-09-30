@@ -183,7 +183,7 @@ ostype = $(word 2,$(subst ., ,$(subst _, ,$(subst -, ,$1))))
 target = $(call ostype,$(@D))
 
 BISON = bison
-CONFIGURE_IN := $(wildcard $(srcdir_prefix)configure.in)
+CONFIGURE_IN := $(firstword $(wildcard $(srcdir_prefix)configure.ac $(srcdir_prefix)configure.in))
 CONFIGURE = $(CONFIGURE_IN:.in=)
 PARSE_Y := $(wildcard $(srcdir_prefix)parse.y)
 KEYWORDS := $(call or,$(wildcard $(srcdir_prefix)defs/keywords),$(wildcard $(srcdir_prefix)keywords))
@@ -320,7 +320,7 @@ rbconfig: $(if $(VCS),prereq) .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post
 	$(MAKE) -f - srcdir=$(srcdir) CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
 	$(CMDFINISHED)
 
-configure: configure.in
+$(srcdir_prefix)configure: $(CONFIGURE_IN)
 	+$(AUTOCONF)
 
 prereq-targets := $(if $(common.mk),$(shell grep -e '^incs:' -e '^srcs:' -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
