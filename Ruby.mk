@@ -353,6 +353,7 @@ endif
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f ChangeLog.orig changelog.tmp
+	$(if $(filter git,$(VCS)),git log -p --reverse ORIG_HEAD..FETCH_HEAD)
 
 stash-save:
 	$(in-srcdir) $(GIT) stash save
