@@ -337,7 +337,7 @@ $(prereq-targets):
 	  sed 's/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(srcdir_prefix)Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
-	$(MAKE) -f - srcdir=$(srcdir) VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
+	$(MAKE) -C $(srcdir) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' \
 	BOOTSTRAPRUBY="$(RUBY)" BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
