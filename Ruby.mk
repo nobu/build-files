@@ -362,7 +362,7 @@ stash-pop:
 
 up: up-remote update-rubyspec up-local .force
 $(if $(after-up),$(after-up),.do-up-remote): .do-up
-.do-up-remote: $(before-up) .do-up $(after-up) .force
+.do-up-remote: $(before-up) .do-up $(after-up) .post-prereq .force
 
 up-remote: $(UPDATE_PREREQ_LOCAL) .do-up-remote .force
 update-rubyspec: prereq
@@ -374,6 +374,7 @@ up-local: prereq .force
 endif
 
 .do-prereq: .pre-prereq
+.pre-prereq: $(if $(filter up,$(MAKECMDGOALS)),.do-up)
 
 host-miniruby: $(MINIRUBY)
 
