@@ -150,7 +150,7 @@ nmake := $(shell command -v nmake 2>&-)
 bcc32 := $(shell command -v bcc32 2>&-)
 ifneq ($(nmake),)
 make-mswin32 = cd "$(1)" && \
-	$(if $(wildcard "$(1)/run.cmd"),./run.cmd) nmake -l \
+	$(basename $(firstword $(wildcard "$(1)/.run.cmd" "$(1)/run.cmd"))) nmake -l \
 	$(if $(filter-out %=% -%,$(firstword $(MAKEFLAGS))),-)$(filter-out subdirs=% -j% --%,$(MAKEFLAGS))
 configure-mswin32 = $(srcdir_prefix)win32/Makefile.sub
 config-mswin32 = cd $(@D); \
