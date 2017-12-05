@@ -333,7 +333,8 @@ ifneq ($(prereq-targets),)
 $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsubst .do-%,%,$(value target)):$(value target))))
 
 $(prereq-targets):
-	@{ \
+	$(Q) touch $(srcdir)/.top-enc.mk 2>/dev/null || exit 0; \
+	{ \
 	  sed 's/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(srcdir_prefix)Makefile.in; \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
