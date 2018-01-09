@@ -203,7 +203,7 @@ endif
 
 PAGER ?= less
 MAKEFILE_LIST := $(sort $(wildcard $(MAKEFILE_LIST) GNUmakefile Makefile makefile Makefile.in common.mk $(MAKEFILES)))
-EXTOUT ?= $(if $(filter .,$(srcdir)),.)./ext
+EXTOUT ?= $(if $(filter .,$(srcdir)),../ext,.ext)
 RDOCOUT ?= $(EXTOUT)/rdoc
 RBCONFIG ?= ./.rbconfig.time
 export EXTOUT RDOCOUT RBCONFIG
