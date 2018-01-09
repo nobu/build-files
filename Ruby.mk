@@ -39,6 +39,7 @@ UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 	-e 's/.*Rev:/\#define RUBY_REVISION/p'
 
 VCS = $(SVN)
+VCSRESET = $(VCS) revert $(srcdir)
 SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,*.ci) $(call svn_srcs,insns.def) \
 	$(call svn_srcs,*.def) $(call svn_srcs,ccan) \
@@ -82,6 +83,7 @@ POST_UP2 = $(GIT_SVN) rebase
     endif
 VCSCOMMIT = $(VCS) push
   endif
+VCSRESET = $(GIT) -C $(srcdir) checkout -f
 else ifneq ($(and $(CVS),$(wildcard $(srcdir)/CVS/Entries)),)
 VCS = $(CVS)
 SRCS := $(call cvs_srcs) $(call cvs_srcs,missing/) $(call cvs_srcs,win32/)
@@ -470,6 +472,10 @@ pre-install-local: $(subdirs:=/pre-install-local)
 post-install-local: $(subdirs:=/post-install-local)
 pre-install-ext: $(subdirs:=/pre-install-ext)
 post-install-ext: $(subdirs:=/post-install-ext)
+
+reset:
+	$(VCSRESET)
+	$(MAKE) prereq
 
 exam: prereq .pre-exam test test-all test-rubyspec .post-exam .force
 check: prereq .pre-check test test-all .post-check .force
