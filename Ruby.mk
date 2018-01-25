@@ -484,6 +484,10 @@ test-all: prereq .pre-test-all $(subdirs:=/test-all) .post-test-all .force
 test-rubyspec: prereq .pre-test-rubyspec $(subdirs:=/test-rubyspec) .post-test-rubyspec .force
 try: $(DEFAULTARCH)/miniruby try.rb
 	$(DEFAULTARCH)/miniruby try.rb
+
+ifneq ($(wildcard $(srcdir_prefix)tool/vcs.rb),)
+VCSCOMMIT := $(BASERUBY) $(if $(srcdir_prefix),-C $(srcdir_prefix)) -I./tool -rvcs -e 'VCS.detect(".").commit'
+endif
 commit:
 	$(VCSCOMMIT)
 shit: exam commit
