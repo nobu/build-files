@@ -352,6 +352,7 @@ endif
 
 .do-up: $(before-up)
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
+	git fetch github
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
