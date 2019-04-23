@@ -1,11 +1,22 @@
 RUBYOPT =
 PWD := $(shell pwd)
-srcdir_prefix := $(if $(wildcard Makefile.in),,$(if $(wildcard src/Makefile.in),src/,))
-srcdir := $(if $(srcdir_prefix),$(patsubst %/,%,$(srcdir_prefix)),.)
+ifneq ($(wildcard template/Makefile.in),)
+srcdir = src
+srcdir_prefix = src/
+Makefile.in = template/Makefile.in
+else ifneq ($(wildcard src/Makefile.in),)
+srcdir = src
+srcdir_prefix = src/
+Makefile.in = src/Makefile.in
+else
+srcdir = .
+srcdir_prefix =
+Makefile.in = Makefile.in
+endif
 in-srcdir := $(if $(srcdir_prefix),cd $(srcdir) &&)
 
 define cvs_srcs
-$(addprefix $(srcdir_prefix)$(1),$(shell cut -d/ -f2 $(srcdir_prefix)$(1)CVS/Entries | grep -e '\.[chy]$$' | sort))
+$(addprefix $(srcdir_prefix)$(1),$(shell cut -d/ -f2 $(srcdir_prefix)$(1)CVS/Entries | grep '\.[chy]$$' | sort))
 endef
 define svn_srcs
 $(subst .svn/text-base/,,$(patsubst %.svn-base,%,$(wildcard $(filter-out ./,$(dir $(srcdir_prefix)$(1))).svn/text-base/$(call or,$(notdir $(1)),*.[chy]).svn-base)))
@@ -109,7 +120,7 @@ $(if $(findstring p,$(mflags)),$(eval print-database := t))\
 $(if $(findstring k,$(mflags)),$(eval keep-going := t))\
 )
 
-RUBY_PROGRAM_VERSION := $(shell sed -n 's/^\#define RUBY_VERSION "\([0-9][.0-9]*\)"/\1/p' $(srcdir_prefix)version.h)
+RUBY_PROGRAM_VERSION := $(shell sed -n 's/^\#define RUBY_VERSION "\([0-9][.0-9]*\)"/\1/p' $(srcdir_prefix)version.h /dev/null)
 MAJOR := $(word 1,$(subst ., ,$(RUBY_PROGRAM_VERSION)))
 MINOR := $(word 2,$(subst ., ,$(RUBY_PROGRAM_VERSION)))
 
@@ -167,7 +178,10 @@ config-bccwin32 = cd $(@D); \
 	$(if $(wildcard $@), $(shell sed -n 's/^srcdir=//p' $@),$(PWD))/bcc32/configure.bat
 endif
 common.mk := $(wildcard $(srcdir_prefix)common.mk)
-configure-default = $(srcdir_prefix)Makefile.in $(common.mk) $(subdir)/config.status
+ifeq ($(common.mk),)
+common.mk := $(wildcard defs/common.mk)
+endif
+configure-default = $(Makefile.in) $(common.mk) $(subdir)/config.status
 submake = $(strip $(call $(if $(make-$(target)),make-$(target),make-default),$(@D)) $(CMDVARS))
 
 AUTOCONF = autoconf
@@ -204,7 +218,7 @@ endif
 #subdirs := $(filter-out $(DEFAULTARCH),$(subdirs)) $(DEFAULTARCH)
 
 PAGER ?= less
-MAKEFILE_LIST := $(sort $(wildcard $(MAKEFILE_LIST) GNUmakefile Makefile makefile Makefile.in common.mk $(MAKEFILES)))
+MAKEFILE_LIST := $(sort $(wildcard $(MAKEFILE_LIST) GNUmakefile Makefile makefile $(Makefile.in) $(common.mk) $(MAKEFILES)))
 EXTOUT ?= $(if $(filter .,$(srcdir)),../ext,.ext)
 RDOCOUT ?= $(EXTOUT)/rdoc
 RBCONFIG ?= ./.rbconfig.time
@@ -270,7 +284,7 @@ endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
 phony-targets = all main prog
-phony-filter := TAGS builtpack% $(if $(common.mk),$(shell grep -e ^incs: -e ^srcs: -e ^change: $(common.mk) | sed s/:.*$$//))
+phony-filter := TAGS builtpack% $(if $(common.mk),$(shell sed -n '/^incs:/s/:.*$$//p;/^srcs:/s/:.*$$//p;/^change/s/:.*$$//p' $(common.mk)))
 phony-filter += $(shell sed '/\.force$$/!d;/^[a-zA-Z][-a-zA-Z0-9]*[a-zA-Z0-9]:/!d;s/:.*//' $(MAKEFILE_LIST))
 phony-filter += $(shell sed -n 's/^\.PHONY://p' $(MAKEFILE_LIST))
 phony-filter := $(sort $(phony-filter))
@@ -316,18 +330,20 @@ rbconfig: $(if $(VCS),prereq) .pre-rbconfig $(subdirs:=/$(RBCONFIG:./%=%)) .post
 
 %.c: %.y
 	+{ \
-	  sed '/^@/d' $(srcdir_prefix)Makefile.in; \
+	  sed '/^@/d' $(Makefile.in); \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
-	$(MAKE) -f - srcdir=$(srcdir) CHDIR=cd VPATH=include/ruby YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
+	$(MAKE) -f - srcdir=$(srcdir) CHDIR=cd VPATH=include/ruby BISON="$(BISON)" YACC="$(BISON) -y" YFLAGS="$(YFLAGS)" \
+		CPP="$(CPP)" COUTFLAG=-o NULLCMD=: V=1 $@
 	$(CMDFINISHED)
 
 $(srcdir_prefix)configure: $(CONFIGURE_IN)
 	+$(AUTOCONF)
 
-prereq-targets := $(if $(common.mk),$(shell grep -e '^incs:' -e '^srcs:' -e '^prereq:' -e '/revision\.h:' -e '^change:' $(common.mk) | \
-		    sed -e 's/:.*//;s/^/.do-/;s,.*/,,') \
-		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(srcdir_prefix)Makefile.in))
+prereq-targets := $(if $(common.mk),$(shell sed \
+		    -e '/^incs:/ba' -e '/^srcs:/ba' -e '/^prereq:/ba' -e '/\/revision\.h:/ba' -e '/^change:/ba' -e d \
+		    -e :a -e 's/:.*//;s/^/.do-/;s,.*/,,' $(common.mk)) \
+		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(Makefile.in)))
 prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
 
 ifneq ($(VCS),)
@@ -337,17 +353,18 @@ $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsu
 $(prereq-targets):
 	$(Q) touch $(srcdir)/.top-enc.mk 2>/dev/null || exit 0; \
 	{ \
-	  sed 's/^@.*@$$//;s/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(srcdir_prefix)Makefile.in; \
+	  sed 's/^@.*@$$//;s/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(Makefile.in); \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
 	$(MAKE) -C $(srcdir) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' \
 	BOOTSTRAPRUBY="$(RUBY)" BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
-	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" YACC="$(BISON) -y" VCSUP="$(VCSUP)" VCS="$(VCS)" \
+	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" BISON="$(BISON)" \
+	VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
 	CONFIGURE=configure \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
-	$(if $(filter-out revision.h,$@),revision.h prereq)
+	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix)revision.h prereq)
 endif
 
 .do-up: $(before-up)
