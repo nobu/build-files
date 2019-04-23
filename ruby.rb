@@ -27,6 +27,15 @@ while arg = ARGV[0]
     else
       command.unshift("gdb", "-q")
     end
+  when re =~ "lldb"
+    command.unshift("--")
+    if value
+      require 'shellwords'
+      command.unshift(*Shellwords.shellwords(value))
+    else
+      lldbinit = File.join(File.dirname($0), "misc/lldb_cruby.py")
+      command.unshift("lldb", "-O", "command script import #{lldbinit}")
+    end
   when re =~ "rubyopt"
     rubyopt = value
   when re =~ "print-libraries"
