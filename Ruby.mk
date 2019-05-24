@@ -367,16 +367,27 @@ $(prereq-targets):
 	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix)revision.h prereq)
 endif
 
+PULL_REQUEST_HEADS = 'refs/remotes/github/pull/[1-9]???/head'
+GIT_LATEST_HEAD = git -C $(srcdir) for-each-ref --sort=-refname --format='%(refname:short)'
+
 .do-up: $(before-up)
 	$(if $(filter git,$(VCS)),$(eval prev_head := $(shell git -C $(srcdir) log -1 --format=%H HEAD)))
 	$(if $(prev_head),@ echo HEAD = $(prev_head))
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
+	$(eval last_pr := \
+		$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS)))
+	$(if $(last_pr),,\
+		$(eval PULL_REQUEST_HEADS := $(subst ?/,/,$(PULL_REQUEST_HEADS))) \
+		$(eval last_pr := \
+			$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS))))
 	git -C $(srcdir) fetch github
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
+	-@ set -- $$($(GIT_LATEST_HEAD) $(PULL_REQUEST_HEADS) | sed -n '/\/$(patsubst github/pull/%/head,%,$(last_pr))\//q;s/^/HEAD../p'); \
+	[ "$$#" = 0 ] || exec git -C $(srcdir) log -p $$@
 
 stash-save:
 	$(in-srcdir) $(GIT) stash save
