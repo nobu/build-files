@@ -371,7 +371,7 @@ endif
 	$(if $(filter git,$(VCS)),$(eval prev_head := $(shell git -C $(srcdir) log -1 --format=%H HEAD)))
 	$(if $(prev_head),@ echo HEAD = $(prev_head))
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
-	git fetch github
+	git -C $(srcdir) fetch github
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
