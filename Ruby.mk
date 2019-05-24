@@ -42,7 +42,7 @@ GIT = $(if $(shell command -v git 2>&-),git)
 GIT_SVN = $(if $(GIT),$(GIT) -C $(srcdir) svn)
 svn-up = update
 svn-up-options = --accept postpone
-git-up = pull --no-edit
+git-up = pull --no-edit --rebase
 ifneq ($(and $(SVN),$(wildcard $(srcdir)/.svn/entries)),)
 UPDATE_REVISION = cd $(srcdir) && $(VCS) info $(@D) | \
 	sed -n \
@@ -89,7 +89,7 @@ after-up := $(before-up:-save=-pop)
 VCS = $(GIT)
 VCSUP = $(VCS) -C $(srcdir) $(git-up)
     ifneq ($(wildcard .git/svn),)
-POST_UP1 = $(GIT) -C $(srcdir) pull --no-edit --rebase
+POST_UP1 = $(GIT) -C $(srcdir) $(git-up)
 POST_UP2 = $(GIT_SVN) rebase
     endif
 VCSCOMMIT = $(VCS) push
