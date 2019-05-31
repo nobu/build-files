@@ -380,13 +380,15 @@ GIT_LATEST_HEAD = git -C $(srcdir) for-each-ref --sort=-refname --format='%(refn
 		$(eval PULL_REQUEST_HEADS := $(subst ?/,/,$(PULL_REQUEST_HEADS))) \
 		$(eval last_pr := \
 			$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS))))
+	$(if $(last_pr),$(eval last_pr := $(patsubst github/pull/%/head,%,$(last_pr))))
+	$(if $(last_pr),@echo LAST-PR = $(last_pr))
 	git -C $(srcdir) fetch github
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
-	-@ set -- $$($(GIT_LATEST_HEAD) $(PULL_REQUEST_HEADS) | sed -n '/\/$(patsubst github/pull/%/head,%,$(last_pr))\//q;s/^/HEAD../p'); \
+	-@ set -- $$($(GIT_LATEST_HEAD) $(PULL_REQUEST_HEADS) | sed -n '/\/$(last_pr)\//q;s/^/HEAD../p'); \
 	[ "$$#" = 0 ] || exec git -C $(srcdir) log -p $$@
 
 stash-save:
