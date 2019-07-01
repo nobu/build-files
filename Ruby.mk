@@ -1,17 +1,13 @@
 RUBYOPT =
 PWD := $(shell pwd)
-ifneq ($(wildcard template/Makefile.in),)
-srcdir = src
-srcdir_prefix = src/
-Makefile.in = template/Makefile.in
-else ifneq ($(wildcard src/Makefile.in),)
+ifneq ($(wildcard src/Makefile.in),)
 srcdir = src
 srcdir_prefix = src/
 Makefile.in = src/Makefile.in
 else
 srcdir = .
 srcdir_prefix =
-Makefile.in = Makefile.in
+Makefile.in = $(firstword $(wildcard template/Makefile.in Makefile.in))
 endif
 in-srcdir := $(if $(srcdir_prefix),cd $(srcdir) &&)
 
