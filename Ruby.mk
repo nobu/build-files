@@ -355,7 +355,7 @@ $(prereq-targets):
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
 	$(MAKE) -C $(srcdir) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
-	CHDIR=cd MAKEDIRS='mkdir -p' \
+	CHDIR=cd MAKEDIRS='mkdir -p' HAVE_BASERUBY=no \
 	BOOTSTRAPRUBY="$(RUBY)" BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" BISON="$(BISON)" \
 	VCSUP="$(VCSUP)" VCS="$(VCS)" \
