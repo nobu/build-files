@@ -117,7 +117,7 @@ end
 ruby = ENV["RUBY"]
 begin
   break if ruby and File.exist?(ruby)
-  name = File.basename($0)
+  name = File.basename($0, ".rb")
   if /\Amini/ =~ name
     ruby = File.expand_path(name+config['EXEEXT'], abs_archdir)
     break if File.exist?(ruby)
