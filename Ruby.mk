@@ -67,7 +67,7 @@ endif
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
 	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
 	$(call git_srcs,*.def) $(call git_srcs,ccan) \
-	$(call git_srcs,missing/) \
+	$(call git_srcs,missing/ internal/ template/) \
 	$(call git_srcs,enc/) $(call git_srcs,win32/) \
 	$(call git_srcs,*.h)
 SRCS := $(wildcard $(SRCS))
