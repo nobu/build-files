@@ -66,29 +66,27 @@ arch =
   end
 i386 = ("i3#{$1}" if /^i[4-9](86-.*)/ =~ arch)
 universal = ("universal-darwin" if /darwin/ =~ arch)
-begin
-  abs_archdir = (File.expand_path(archdir, srcdir) if archdir)
-  if abs_archdir and File.file?(conffile = File.join(abs_archdir, rbconf))
-    config = File.read(conffile)
-  elsif File.file?(conffile = File.join(abs_archdir = File.join(srcdir, arch), rbconf))
-    config = File.read(conffile)
-  elsif i386 and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, i386), rbconf))
-    config = File.read(conffile)
-  elsif universal and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, universal), rbconf))
-    config = File.read(conffile)
-  elsif File.file?(conffile = File.join(abs_archdir = File.join(srcdir, "."+arch), rbconf))
-    config = File.read(conffile)
-  elsif i386 and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, "."+i386), rbconf))
-    config = File.read(conffile)
-  elsif universal and File.file?(conffile = File.join(abs_archdir = File.join(srcdir, "."+universal), rbconf))
-    config = File.read(conffile)
-  elsif !version
-    srcdir = File.join(srcdir, version = "trunk")
-    redo
-  else
-    abort "archdir not defined"
-  end
-end while false
+archs = [arch, i386, universal].compact
+if archdir and File.file?(conffile = File.join((abs_archdir = File.expand_path(archdir, srcdir)), rbconf))
+  config = File.read(conffile)
+else
+  begin
+    ["", ".+", ".", "../build/"].product(archs) do |pre, a|
+      arch = pre+a
+      if File.file?(conffile = File.join(abs_archdir = File.join(srcdir, arch), rbconf))
+        config = File.read(conffile)
+        break
+      end
+    end
+    break if config
+    if !version
+      srcdir = File.join(srcdir, version = "trunk")
+      redo
+    else
+      abort "archdir not defined"
+    end
+  end while false
+end
 
 config.sub!(/^(\s*)RUBY_VERSION\b.*(\sor\s*)$/, '\1true\2')
 config = Module.new {
