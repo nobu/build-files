@@ -391,7 +391,7 @@ last-pr:
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
 	-@ set -- $$($(GIT_LATEST_HEAD) $(PULL_REQUEST_HEADS) | sed -n '/\/$(last_pr)\//q;s/^/HEAD../p'); \
-	[ "$$#" = 0 ] || exec git -C $(srcdir) log -p $$@
+	[ "$$#" = 0 ] || exec git -C $(srcdir) log -p -w --reverse $$@
 
 stash-save:
 	$(in-srcdir) $(GIT) stash save
