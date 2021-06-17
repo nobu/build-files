@@ -372,14 +372,13 @@ prev-head:
 	$(if $(filter git,$(VCS)),$(eval prev_head := $(shell git -C $(srcdir) log -1 --format=%H HEAD)))
 	$(if $(prev_head),@ echo HEAD = $(prev_head))
 
+latest-pr = $(patsubst github/pull/%/head,%,$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS)))
+
 last-pr:
-	$(eval last_pr := \
-		$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS)))
+	$(eval last_pr := $(call latest-pr))
 	$(if $(last_pr),,\
 		$(eval PULL_REQUEST_HEADS := $(subst ?/,/,$(PULL_REQUEST_HEADS))) \
-		$(eval last_pr := \
-			$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS))))
-	$(if $(last_pr),$(eval last_pr := $(patsubst github/pull/%/head,%,$(last_pr))))
+		$(eval last_pr := $(call latest-pr)))
 	$(if $(last_pr),@echo LAST-PR = $(last_pr))
 
 .do-up: $(before-up) prev-head last-pr
@@ -391,8 +390,7 @@ last-pr:
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
-	$(eval new_pr := $(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS)))
-	$(eval new_pr := $(patsubst github/pull/%/head,%,$(new_pr)))
+	$(eval new_pr := $(call latest-pr))
 	$(if $(filter-out $(new_pr),$(last_pr)),\
 	$(BASERUBY) -C $(srcdir) -rjson -ropen-uri \
 	-e 'PULL_REQUEST_API = URI("https://api.github.com/repos/ruby/ruby/pulls/")' \
