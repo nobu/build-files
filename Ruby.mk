@@ -207,6 +207,7 @@ ifndef RUBY
 NATIVEARCH := $(patsubst %/Makefile,%,$(shell grep -l '^PREP *= *miniruby' $(subdirs:=/Makefile) /dev/null))
 DEFAULTARCH := $(word 1, $(filter $(ARCH) .$(ARCH),$(NATIVEARCH)) $(NATIVEARCH))
 MINIRUBY := $(DEFAULTARCH)/miniruby
+ORIG_RUBYLIB := $(RUBYLIB)
 export BASERUBY ?= /usr/bin/ruby
 export RUBYLIB = .$(if $(EXTOUT),:$(EXTOUT)/common:$(EXTOUT)/$(DEFAULTARCH)):$(PWD)/lib
 export RUBY := $(if $(BASERUBY),$(BASERUBY),$(if $(patsubst /%,,$(MINIRUBY)),$(PWD)/$(MINIRUBY) -I $(RUBYLIB),$(MINIRUBY)))
@@ -390,16 +391,23 @@ last-pr:
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
+	$(call new-pr,$(last_pr))
+
+new-pr:
+	$(call new-pr,$(PR))
+
+define new-pr
 	$(eval new_pr := $(call latest-pr))
-	$(if $(filter-out $(new_pr),$(last_pr)),\
-	$(BASERUBY) -C $(srcdir) -rjson -ropen-uri \
+	$(if $(filter-out $(new_pr),$(1)),\
+	env RUBYLIB=$(ORIG_RUBYLIB) $(BASERUBY) -C $(srcdir) -rjson -ropen-uri \
 	-e 'PULL_REQUEST_API = URI("https://api.github.com/repos/ruby/ruby/pulls/")' \
-	-e 'prs = (ARGV[0].succ..ARGV[1]).map {|pr|' \
+	-e 'prs = (ARGV[0].to_i.succ..ARGV[1].to_i).map {|pr|' \
 	-e   'base = JSON.parse((PULL_REQUEST_API+pr).open(&:read))["base"]["ref"]' \
 	-e   '"#{base}..github/pull/#{pr}/head"' \
 	-e '}' \
 	-e 'prs.empty? or exec("git", "log", "-p", "-w", "--reverse", *prs)' \
 	$(last_pr) $(new_pr))
+endef
 
 stash-save:
 	$(in-srcdir) $(GIT) stash save
