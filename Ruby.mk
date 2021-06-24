@@ -391,22 +391,13 @@ last-pr:
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
-	$(call new-pr,$(last_pr))
+	$(call new-pr,$(last_pr)..)
 
 new-pr:
-	$(call new-pr,$(PR))
+	$(call new-pr,$(call or,$(PR),$(call latest-pr)))
 
 define new-pr
-	$(eval new_pr := $(call latest-pr))
-	$(if $(filter-out $(new_pr),$(1)),\
-	env RUBYLIB=$(ORIG_RUBYLIB) $(BASERUBY) -C $(srcdir) -rjson -ropen-uri \
-	-e 'PULL_REQUEST_API = URI("https://api.github.com/repos/ruby/ruby/pulls/")' \
-	-e 'prs = (ARGV[0].to_i.succ..ARGV[1].to_i).map {|pr|' \
-	-e   'base = JSON.parse((PULL_REQUEST_API+pr).open(&:read))["base"]["ref"]' \
-	-e   '"#{base}..github/pull/#{pr}/head"' \
-	-e '}' \
-	-e 'prs.empty? or exec("git", "log", "-p", "-w", "--reverse", *prs)' \
-	$(last_pr) $(new_pr))
+	env RUBYLIB=$(ORIG_RUBYLIB) git -C $(srcdir) view-pullrequest $(1)
 endef
 
 stash-save:
