@@ -54,10 +54,6 @@ SRCS := $(call svn_srcs,include/ruby/) $(call svn_srcs,*.[chy]) \
 	$(call svn_srcs,enc/) $(call svn_srcs,win32/)
 SRCS := $(wildcard $(SRCS))
 else ifneq ($(and $(GIT),$(wildcard $(srcdir)/.git)),)
-UPDATE_REVISION = $(in-srcdir) git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
-	sed -e '$$!d' -e '/ *git-svn-id: */!d' -e 's///' \
-	-e 's,.*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
-	-e 's,.*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
 ORIGIN_URL := $(shell $(in-srcdir) git config remote.origin.url)
 ifeq ($(patsubst /%,/,$(patsubst file:%,%,$(ORIGIN_URL))),/)
 UPDATE_PREREQ_LOCAL := update-prereq-local
@@ -75,6 +71,10 @@ SRCS := $(wildcard $(SRCS))
 VCS = $(GIT_SVN)
 VCSUP = $(VCS) rebase $(gitsvnup-options)
 VCSCOMMIT = $(VCS) svn dcommit
+UPDATE_REVISION = $(in-srcdir) git log -n 1 --grep='^ *git-svn-id:' $(@D) | \
+	sed -e '$$!d' -e '/ *git-svn-id: */!d' -e 's///' \
+	-e 's,.*/branches/\([^/]*\)@\([0-9][0-9]*\) .*,\#define RUBY_BRANCH_NAME "\1"/\#define RUBY_REVISION \2,' \
+	-e 's,.*/trunk@\([0-9][0-9]*\) .*,\#define RUBY_REVISION \1,' | tr / '\012'
 before-up := $(shell git status --porcelain | sed '/^?/d;s/.*/stash-save/;q')
 after-up := $(before-up:-save=-pop)
 #  else ifeq ($(patsubst +%,+,$(shell git config remote.origin.fetch)),+)
@@ -91,6 +91,7 @@ POST_UP2 = $(GIT_SVN) rebase
 VCSCOMMIT = $(VCS) push
   endif
 VCSRESET = $(GIT) -C $(srcdir) checkout -f
+UPDATE_REVISION = $(BASERUBY) -C $(srcdir) tool/file2lastrev.rb -q --revision.h
 else ifneq ($(and $(CVS),$(wildcard $(srcdir)/CVS/Entries)),)
 VCS = $(CVS)
 SRCS := $(call cvs_srcs) $(call cvs_srcs,missing/) $(call cvs_srcs,win32/)
