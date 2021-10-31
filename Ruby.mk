@@ -477,6 +477,7 @@ tags: TAGS .force
 TAGS: $(SRCS)
 	@echo updating $@
 	@etags -lc $(wildcard $(patsubst template/%.tmpl,%,$(SRCS)))
+	@etags -a -lruby $(call git_srcs,*.rb)
 
 sudo-install:
 ifneq ($(wildcard $(EXTOUT)),)
