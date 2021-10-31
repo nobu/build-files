@@ -342,7 +342,8 @@ prereq-targets := $(if $(common.mk),$(shell sed \
 		    -e '/^incs:/ba' -e '/^srcs:/ba' -e '/^prereq:/ba' -e '/\/revision\.h:/ba' -e '/^change:/ba' -e d \
 		    -e :a -e 's/:.*//;s/^/.do-/;s,.*/,,' $(common.mk)) \
 		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(Makefile.in)))
-prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
+# prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
+prereq-targets := $(filter-out revision.h $(srcdir_prefix)revision.h,$(prereq-targets))
 
 ifneq ($(VCS),)
 ifneq ($(prereq-targets),)
@@ -357,14 +358,14 @@ $(prereq-targets):
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
 	} | \
 	$(MAKE) -C $(srcdir) -f - srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
-	CHDIR=cd MAKEDIRS='mkdir -p' HAVE_BASERUBY=no \
+	CHDIR=cd MAKEDIRS='mkdir -p' HAVE_BASERUBY=yes \
 	BOOTSTRAPRUBY="$(RUBY)" BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" BISON="$(BISON)" \
 	VCSUP="$(VCSUP)" VCS="$(VCS)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
 	CONFIGURE=configure \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
-	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix)revision.h prereq)
+	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix).revision.time prereq)
 endif
 
 PULL_REQUEST_HEADS = 'refs/remotes/github/pull/[1-9]???/head'
@@ -441,9 +442,9 @@ endif
 revision.h: .force
 .revision.time: .force
 
-ifeq ($(filter $(srcdir_prefix)revision.h,$(prereq-targets)),)
+#ifeq ($(filter $(srcdir_prefix)revision.h,$(prereq-targets)),)
 $(srcdir_prefix)revision.h:
-	@{ $(in-srcdir) LC_MESSAGES=C $(UPDATE_REVISION); } > "$@.tmp"
+	@{ LC_MESSAGES=C $(UPDATE_REVISION); } > "$@.tmp"
 	@if test -f "$@" -a -s "$@.tmp" && diff -u "$@" "$@.tmp" > /dev/null 2>&1; then \
 	    rm -f "$@.tmp"; \
 	else \
@@ -451,7 +452,7 @@ $(srcdir_prefix)revision.h:
 	fi
 	touch .revision.time
 #	@! fgrep revision.h version.h > /dev/null || $(BASERUBY) tool/revup.rb
-endif
+#endif
 
 help: .force
 	@$(MAKE) -f common.mk MESSAGE_BEGIN='@for line in' MESSAGE_END='; do echo "$$$$line"; done' $@
