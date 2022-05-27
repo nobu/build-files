@@ -280,7 +280,7 @@ $(1)/%: prereq .force
 	+$$(submake) TOPMAKE=$(value TOPMAKE) $$(mflags) $$(@F)
 
 $(1)/inst: .force
-	@{ echo include GNUmakefile; echo 'install-everything: install; $$$$(CP) $$$$(INSTALLED_LIST) $$$$(DESTDIR)/'; } | \
+	@{ echo include GNUmakefile; echo 'install-everything: clean-docs install; $$$$(CP) $$$$(INSTALLED_LIST) $$$$(DESTDIR)/'; } | \
 	    $$(MAKE) -C $$(@D) -f - prereq-targets= install-everything INSTRUBY_OPTS=--install=dbg
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
