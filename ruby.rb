@@ -106,8 +106,7 @@ else
 end
 
 begin
-  require 'pathname'
-  abs_archdir = Pathname.new(abs_archdir).realpath.to_s
+  abs_archdir = File.realpath(abs_archdir)
 rescue Errno::EINVAL
   abs_archdir = File.extern_path(abs_archdir)
 end
