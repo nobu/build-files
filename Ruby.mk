@@ -562,3 +562,9 @@ $(builttargets):
 .PHONY: .force
 .force:
 
+.PHONY: ChangeLog
+ChangeLog:
+	$(ECHO) Generating $@
+	-$(Q) $(BASERUBY) -Itool/lib -rvcs \
+	-e 'VCS.detect(ARGV[0]).export_changelog("@", nil, nil, ARGV[1])' \
+	. $@
