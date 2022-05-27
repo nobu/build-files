@@ -390,7 +390,7 @@ last-pr:
 
 .do-up: $(before-up) prev-head last-pr
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
-	@if git log -1 | grep -F '[ci skip]' > /dev/null; then git push all; fi
+	@if git log -1 --format=%B | grep -q -F '[ci skip]' || git log -1 --format=%s | grep -q '^\[DOC\]'; then git push all; fi
 	git -C $(srcdir) fetch usual
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
