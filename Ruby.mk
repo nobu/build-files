@@ -346,6 +346,7 @@ prereq-targets := $(if $(common.mk),$(shell sed \
 		    -e '/^incs:/ba' -e '/^srcs:/ba' -e '/^prereq:/ba' -e '/\/revision\.h:/ba' -e '/^change:/ba' -e d \
 		    -e :a -e 's/:.*//;s/^/.do-/;s,.*/,,' $(common.mk)) \
 		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(Makefile.in)))
+prereq-targets := $(sort $(prereq-targets))
 # prereq-targets := $(subst revision.h,$(srcdir_prefix)revision.h,$(prereq-targets))
 prereq-targets := $(filter-out revision.h $(srcdir_prefix)revision.h,$(prereq-targets))
 
