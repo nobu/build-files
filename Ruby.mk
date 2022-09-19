@@ -355,7 +355,7 @@ $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsu
 
 prereq.status := $(wildcard $(srcdir_prefix)tool/prereq.status)
 $(prereq-targets):
-	$(Q) touch $(srcdir)/.top-enc.mk 2>/dev/null || exit 0; \
+	$(Q) touch $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb 2>/dev/null || exit 0; \
 	{ \
 	  sed $(if $(prereq.status),-f $(prereq.status),'s/^@.*@$$//;s/@[A-Z][A-Z_0-9]*@//g') \
 		$(wildcard $(srcdir_prefix)defs/gmake.mk) $(Makefile.in); \
@@ -365,11 +365,12 @@ $(prereq-targets):
 	CHDIR=cd MAKEDIRS='mkdir -p' HAVE_BASERUBY=yes \
 	BOOTSTRAPRUBY="$(RUBY)" BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" BISON="$(BISON)" \
-	VCSUP="$(VCSUP)" VCS="$(VCS)" \
+	VCSUP="$(VCSUP)" VCS="$(VCS)" BOOTSTRAPRUBY_COMMAND="$(RUBY)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
-	CONFIGURE=configure \
+	CONFIGURE=configure -orevision.h \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix).revision.time prereq)
+	$(Q) $(RM) $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb
 endif
 
 PULL_REQUEST_HEADS = 'refs/remotes/github/pull/[1-9]???/head'
