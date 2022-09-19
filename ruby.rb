@@ -184,6 +184,14 @@ if File.file?(libruby_so)
 end
 ENV["DYLD_PRINT_LIBRARIES"] = "1" if print_libraries
 
+gems = [abs_archdir + "/.bundle", File.expand_path(".bundle", srcdir)]
+if gems.any? {|dir| File.directory?(dir)}
+  if gem_path = ENV["GEM_PATH"]
+    gems << gem_path
+  end
+  ENV["GEM_PATH"] = gems.compact.join(pathsep)
+end
+
 ENV.update(envs)
 
 command << ruby
