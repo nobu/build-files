@@ -130,13 +130,16 @@ endif
 SETTITLE := $(if $(tty),$(shell command -v settitle 2>&-))
 ifeq ($(SETTITLE),)
 SETTITLE := echo ": -*- compilation -*-"
+ENDTITLE :=
+else
+ENDTITLE := && $(SETTITLE)
 endif
 define MESSAGE
 $(if $(nonexec),,@$(SETTITLE) making $(if $(2),$(2),$@))
 $(if $(nonexec),,@echo ")<=== $(1) $(if $(2),$(2),$@) ===>$(if $(nonexec),,")
 endef
 STARTING = $(call MESSAGE,{{{starting,$(1))
-FINISHED = $(call MESSAGE,}}}finished,$(1))
+FINISHED = $(call MESSAGE,}}}finished,$(1))$(ENDTITLE)
 MAKECMDGOALS := $(patsubst q,prereq,$(MAKECMDGOALS))
 CMDSTARTING = $(if $(filter $@,$(MAKECMDGOALS)),,$(call STARTING,$(1)))
 CMDFINISHED = $(if $(filter $@,$(MAKECMDGOALS)),$(call FINISHED,$(1)))
