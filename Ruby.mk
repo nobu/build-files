@@ -453,7 +453,7 @@ revision.h: .force
 
 #ifeq ($(filter $(srcdir_prefix)revision.h,$(prereq-targets)),)
 $(srcdir_prefix)revision.h:
-	@{ LC_MESSAGES=C $(UPDATE_REVISION); } > "$@.tmp"
+	@{ RUBYLIB="$ORIG_RUBYLIB" LC_MESSAGES=C $(UPDATE_REVISION); } > "$@.tmp"
 	@if test -f "$@" -a -s "$@.tmp" && diff -u "$@" "$@.tmp" > /dev/null 2>&1; then \
 	    rm -f "$@.tmp"; \
 	else \
