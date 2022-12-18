@@ -395,7 +395,14 @@ last-pr:
 
 .do-up: $(before-up) prev-head last-pr
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
-	@if git log -1 --format=%B | grep -q -F '[ci skip]' || git log -1 --format=%s | grep -q '^\[DOC\]'; then git push all; fi
+	@if git log -1 --format=%B FETCH_HEAD | grep -q -F '[ci skip]' || \
+	    git log -1 --format=%s FETCH_HEAD | grep -q '^\[DOC\]'; \
+	then \
+	    upstream=`git for-each-ref --format='%(upstream:short)' --points-at=FETCH_HEAD`; \
+	    case "$$upstream" in \
+	    origin/*) git push all "$$upstream:$${upstream#origin/}"; \
+	    esac; \
+	fi
 	git -C $(srcdir) fetch usual
 	$(if $(POST_UP1),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP1))
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
