@@ -23,7 +23,7 @@ define svn_srcs
 $(subst .svn/text-base/,,$(patsubst %.svn-base,%,$(wildcard $(filter-out ./,$(dir $(srcdir_prefix)$(1))).svn/text-base/$(call or,$(notdir $(1)),*.[chy]).svn-base)))
 endef
 define git_srcs
-$(shell $(in-srcdir) $(GIT) ls-files $(1) $(2) $(3) | grep -v '^ext/')
+$(shell $(in-srcdir) $(GIT) ls-files $(1) $(2) $(3) | grep -v -e '^ext/' -e '^test/' -e '^spec/')
 endef
 
 V = 0
@@ -66,7 +66,7 @@ UPDATE_PREREQ := update-prereq
 endif
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
-	$(call git_srcs,*.ci) $(call git_srcs,insns.def) \
+	$(call git_srcs,*.ci) \
 	$(call git_srcs,*.def) $(call git_srcs,ccan) \
 	$(call git_srcs,missing/ internal/ template/) \
 	$(call git_srcs,enc/) $(call git_srcs,win32/) \
@@ -502,7 +502,11 @@ tags: TAGS .force
 
 TAGS: $(SRCS)
 	@echo updating $@
-	@etags -lc $(wildcard $(patsubst template/%.tmpl,%,$(SRCS)))
+	@tmp=$$(mktemp); \
+	trap 'rm -f "$$tmp"' 0; \
+	$(GIT) grep -h --no-line-number -o '^ *# *define  *RBIMPL_ATTR_[A-Z_]*(*' | \
+	sed 's/^ *# *define *//;/_H$$/d;y/(/+/' | sort -u > "$$tmp" && \
+	ctags -e -I@"$$tmp" --langmap=c:.y.inc.def $(call git_srcs,'*.[chy]' '*.inc' '*.def')
 	@etags -a -lruby $(call git_srcs,*.rb)
 
 sudo-install:
