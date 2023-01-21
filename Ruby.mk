@@ -308,6 +308,10 @@ $(foreach goal,$(sort $(phony-targets) $(filter-out $(phony-filter),$(cmdgoals))
 none:
 .PHONY: none
 
+# prereq: clean-revision.time
+clean-revision.time:
+	$(RM) .revision.time
+
 prereq: .post-prereq
 
 .post-prereq: .do-prereq $(RIPPER)
@@ -364,6 +368,7 @@ $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsu
 
 prereq.status := $(wildcard $(srcdir_prefix)tool/prereq.status)
 $(prereq-targets):
+	[ -f revision.h ] || $(RM) .revision.time
 	$(Q) touch $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb 2>/dev/null || exit 0; \
 	{ \
 	  sed $(if $(prereq.status),-f $(prereq.status),'s/^@.*@$$//;s/@[A-Z][A-Z_0-9]*@//g') \
