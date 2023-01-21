@@ -1,5 +1,10 @@
 RUBYOPT =
 PWD := $(shell pwd)
+
+ifneq ($(filter notintermediate,$(.FEATURES)),)
+DOT_WAIT = .WAIT
+endif
+
 ifneq ($(wildcard src/Makefile.in),)
 srcdir = src
 srcdir_prefix = src/
