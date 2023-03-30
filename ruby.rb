@@ -2,6 +2,7 @@
 
 command = []
 envs = {}
+dryrun = false
 while arg = ARGV[0]
   break ARGV.shift if arg == '--'
   /\A--([-\w]+)(?:=(.*))?\z/ =~ arg or break
@@ -49,6 +50,8 @@ while arg = ARGV[0]
   when re =~ "env"
     value = value.split(/\=/, 2)
     envs[value.first] = value.last
+  when re =~ "dryrun"
+    dryrun = true
   else
     break
   end
@@ -154,9 +157,9 @@ if File.directory?(lib = File.expand_path("lib", srcdir)) or
   libs << lib
 end
 
-ENV["RUBY"] = File.extern_path(ruby)
-ENV["PATH"] = [abs_archdir, ENV["PATH"]].compact.join(File::PATH_SEPARATOR)
-ENV["RUBYOPT"] = rubyopt if rubyopt
+envs["RUBY"] = File.extern_path(ruby)
+envs["PATH"] = [abs_archdir, ENV["PATH"]].compact.join(File::PATH_SEPARATOR)
+envs["RUBYOPT"] = rubyopt if rubyopt
 
 libs.collect!(&File.method(:extern_path))
 libs.uniq!
@@ -171,25 +174,25 @@ when /riscos/
 else
   pathsep = ":"
 end
-ENV["RUBYLIB"] = libs.join(pathsep)
+envs["RUBYLIB"] = libs.join(pathsep)
 
 libruby_so = File.join(abs_archdir, config['LIBRUBY_SO'])
 if File.file?(libruby_so)
   if e = config['LIBPATHENV'] and !e.empty?
-    ENV[e] = [abs_archdir, ENV[e]].compact.join(pathsep)
+    envs[e] = [abs_archdir, ENV[e]].compact.join(pathsep)
   end
   if /linux/ =~ RUBY_PLATFORM
-    ENV["LD_PRELOAD"] = [libruby_so, ENV["LD_PRELOAD"]].compact.join(' ')
+    envs["LD_PRELOAD"] = [libruby_so, ENV["LD_PRELOAD"]].compact.join(' ')
   end
 end
-ENV["DYLD_PRINT_LIBRARIES"] = "1" if print_libraries
+envs["DYLD_PRINT_LIBRARIES"] = "1" if print_libraries
 
 gems = [abs_archdir + "/.bundle", File.expand_path(".bundle", srcdir)]
 if gems.any? {|dir| File.directory?(dir)}
   if gem_path = ENV["GEM_PATH"]
     gems << gem_path
   end
-  ENV["GEM_PATH"] = gems.compact.join(pathsep)
+  envs["GEM_PATH"] = gems.compact.join(pathsep)
 end
 
 ENV.update(envs)
@@ -197,4 +200,11 @@ ENV.update(envs)
 command << ruby
 command.concat(ARGV)
 command.push(:close_others => false)
+if dryrun
+  envs.each do |k, v|
+    puts "#{k}=#{v} \\"
+  end
+  puts command.join(" \\\n")
+  exit
+end
 exec(*command)
