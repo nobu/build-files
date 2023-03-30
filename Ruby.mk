@@ -504,9 +504,12 @@ TAGS: $(SRCS)
 	@echo updating $@
 	@tmp=$$(mktemp); \
 	trap 'rm -f "$$tmp"' 0; \
+	{ \
 	$(GIT) grep -h --no-line-number -o '^ *# *define  *RBIMPL_ATTR_[A-Z_]*(*' | \
-	sed 's/^ *# *define *//;/_H$$/d;y/(/+/' | sort -u > "$$tmp" && \
-	ctags -e -I@"$$tmp" --langmap=c:.y.inc.def $(call git_srcs,'*.[chy]' '*.inc' '*.def')
+	sed 's/^ *# *define *//;/_H$$/d;y/(/+/' | sort -u && \
+	echo 'NORETURN+'; \
+	} > "$$tmp" && \
+	ctags -e -I@"$$tmp" --langmap=c:+.y.inc.def $(call git_srcs,'*.[chy]' '*.inc' '*.def')
 	@etags -a -lruby $(call git_srcs,*.rb)
 
 sudo-install:
