@@ -35,7 +35,7 @@ while arg = ARGV[0]
       command.unshift(*Shellwords.shellwords(value))
     else
       lldbinit = File.join(File.dirname($0), "misc/lldb_cruby.py")
-      command.unshift("lldb", "-o", "command script import #{lldbinit}")
+      command.unshift("lldb", "-o", "command script import -r #{lldbinit}")
     end
   when re =~ "rubyopt"
     rubyopt = value
