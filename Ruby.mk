@@ -203,7 +203,12 @@ subdirs := $(sort $(patsubst %/,%,$(dir $(subdirs))))
 ostype = $(word 2,$(subst ., ,$(subst _, ,$(subst -, ,$1))))
 target = $(call ostype,$(@D))
 
+BISON := $(wildcard tool/lrama/exe/lrama)
+ifeq ($(BISON),)
 BISON = bison
+else
+BISON := $(BASERUBY) $(PWD)/$(BISON)
+endif
 CONFIGURE_IN := $(firstword $(wildcard $(srcdir_prefix)configure.ac $(srcdir_prefix)configure.in))
 CONFIGURE = $(CONFIGURE_IN:.in=)
 PARSE_Y := $(wildcard $(srcdir_prefix)parse.y)
