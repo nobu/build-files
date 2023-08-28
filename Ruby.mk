@@ -215,7 +215,7 @@ PARSE_Y := $(wildcard $(srcdir_prefix)parse.y)
 KEYWORDS := $(call or,$(wildcard $(srcdir_prefix)defs/keywords),$(wildcard $(srcdir_prefix)keywords))
 LEX_C := $(if $(KEYWORDS),$(srcdir_prefix)lex.c)
 ID_H := $(if $(shell grep '/^id\.h:/' $(common.mk)),$(srcdir_prefix)$(ID_H))
-RIPPER := $(if $(wildcard $(srcdir_prefix)ext/ripper/depend),ripper)
+RIPPER := $(notdir $(dir $(wildcard $(srcdir_prefix)ext/ripper/depend)))
 PREREQ = .force $(CONFIGURE) $(PARSE_Y:.y=.c) $(LEX_C) $(ID_H) revision.h .revision.time
 ifndef RUBY
 NATIVEARCH := $(patsubst %/Makefile,%,$(shell grep -l '^PREP *= *miniruby' $(subdirs:=/Makefile) /dev/null))
@@ -458,17 +458,15 @@ host-miniruby: $(MINIRUBY)
 
 lex.c: $(KEYWORDS)
 
-ifeq ($(filter .do-srcs,$(prereq-targets)),)
+ripper: $($(filter .do-srcs,$(prereq-targets)),ripper_srcs,.do-prereq)
+
 ripper_hdrdir = $(if $(wildcard $(srcdir_prefix)include/ruby/ruby.h),top_srcdir,hdrdir)
-ripper: .force
+ripper_srcs: .force
 	$(CMDSTARTING)
 	$(MAKE) -C $(srcdir_prefix)ext/ripper -f depend \
 		Q=$(Q) ECHO=$(ECHO) $(ripper_hdrdir)=../.. VPATH=../.. srcdir=. \
 		RUBY="$(RUBY)" PATH_SEPARATOR=:
 	$(FINISHED)
-else
-ripper: .do-prereq
-endif
 
 revision.h: .force
 .revision.time: .force
