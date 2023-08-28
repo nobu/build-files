@@ -376,11 +376,12 @@ prereq.status := $(wildcard $(srcdir_prefix)tool/prereq.status)
 $(prereq-targets):
 	$(if $(wildcard revision.h),,$(RM) .revision.time)
 	$(Q) touch $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb 2>/dev/null || exit 0; \
+	$(if $(prereq.status), \
+	sed -f $(prereq.status) $(wildcard $(srcdir_prefix)defs/gmake.mk) $(Makefile.in) $(common.mk),\
 	{ \
-	  sed $(if $(prereq.status),-f $(prereq.status),'s/^@.*@$$//;s/@[A-Z][A-Z_0-9]*@//g') \
-		$(wildcard $(srcdir_prefix)defs/gmake.mk) $(Makefile.in); \
+	  sed 's/^@.*@$$//;s/@[A-Z][A-Z_0-9]*@//g' $(wildcard $(srcdir_prefix)defs/gmake.mk) $(Makefile.in); \
 	  $(if $(common.mk),sed 's/{[.;]*$$([a-zA-Z0-9_]*)}//g' $(common.mk);) \
-	} | \
+	}) | \
 	$(MAKE) -C $(srcdir) -f - srcdir=. top_srcdir=. VPATH=include/ruby MKFILES="" PREP="" WORKDIRS="" \
 	CHDIR=cd MAKEDIRS='mkdir -p' HAVE_BASERUBY=yes \
 	BOOTSTRAPRUBY="$(RUBY)" BASERUBY="$(RUBY)" MINIRUBY="$(RUBY)" RUBY="$(RUBY)" RBCONFIG="" \
