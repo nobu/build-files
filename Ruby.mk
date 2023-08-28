@@ -360,6 +360,7 @@ $(srcdir_prefix)configure: $(CONFIGURE_IN)
 	+$(AUTOCONF)
 
 prereq-targets := $(if $(common.mk),$(shell sed \
+		    -e 's/^\$$(DOT_WAIT)//' \
 		    -e '/^incs:/ba' -e '/^srcs:/ba' -e '/^prereq:/ba' -e '/\/revision\.h:/ba' -e '/^change:/ba' -e d \
 		    -e :a -e 's/:.*//;s/^/.do-/;s,.*/,,' $(common.mk)) \
 		    $(shell sed -n '/^update-[a-z][a-z]*:/s/:.*//p' $(Makefile.in)))
@@ -386,7 +387,7 @@ $(prereq-targets):
 	ENC_MK=.top-enc.mk REVISION_FORCE=PHONY PROGRAM="" BISON="$(BISON)" \
 	VCSUP="$(VCSUP)" VCS="$(VCS)" BOOTSTRAPRUBY_COMMAND="$(RUBY)" \
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
-	CONFIGURE=configure -orevision.h \
+	DOT_WAIT=$(DOT_WAIT) CONFIGURE=configure -orevision.h \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
 	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix).revision.time prereq)
 	$(Q) $(RM) $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb
