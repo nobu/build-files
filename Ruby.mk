@@ -597,6 +597,7 @@ $(builttargets):
 .force:
 
 .PHONY: ChangeLog
+ChangeLog: RUBYLIB=$(ORIG_RUBYLIB)
 ChangeLog:
 	$(ECHO) Generating $@
 	-$(Q) $(BASERUBY) -Itool/lib -rvcs \
