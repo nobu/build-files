@@ -380,7 +380,7 @@ $(foreach target,$(prereq-targets),$(if $(filter .do-%,$(target)),$(eval $(patsu
 prereq.status := $(wildcard $(srcdir_prefix)tool/prereq.status)
 $(prereq-targets):
 	$(if $(wildcard revision.h),,$(RM) .revision.time)
-	$(Q) touch $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb 2>/dev/null || true
+	$(Q)+ touch $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb 2>/dev/null || true
 	$(Q) $(if $(prereq.status), \
 	sed -f $(prereq.status) $(wildcard $(srcdir_prefix)defs/gmake.mk) $(Makefile.in) $(common.mk),\
 	{ \
