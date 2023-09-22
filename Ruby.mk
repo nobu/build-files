@@ -415,6 +415,8 @@ last-pr:
 		$(eval last_pr := $(call latest-pr)))
 	$(if $(last_pr),@echo LAST-PR = $(last_pr))
 
+GIT_LOG_EXCLUDES = test/yarp/snapshots/
+
 .do-up: $(before-up) prev-head last-pr
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
 	@if git log -1 --format=%B FETCH_HEAD | grep -q -F '[ci skip]' || \
@@ -430,7 +432,8 @@ last-pr:
 	$(if $(POST_UP2),-$(call or,$(in-srcdir),env) LC_TIME=C $(POST_UP2))
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
-	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse $(prev_head)..HEAD)
+	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse \
+		$(prev_head)..HEAD -- $(addprefix ':(exclude)',$(GIT_LOG_EXCLUDES)))
 	$(call new-pr,$(last_pr)..)
 
 new-pr:
