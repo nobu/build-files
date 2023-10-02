@@ -420,7 +420,7 @@ last-pr:
 		$(eval last_pr := $(call latest-pr)))
 	$(if $(last_pr),@echo LAST-PR = $(last_pr))
 
-GIT_LOG_EXCLUDES = test/yarp/snapshots/
+GIT_LOG_EXCLUDES = test/prism/snapshots/ test/yarp/snapshots/
 
 .do-up: $(before-up) prev-head last-pr
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
