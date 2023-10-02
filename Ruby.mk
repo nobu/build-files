@@ -66,12 +66,17 @@ UPDATE_PREREQ := update-prereq
 endif
 
 SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
-	$(call git_srcs,*.ci) \
+	$(call git_srcs,*.ci *.inc) \
 	$(call git_srcs,*.def) $(call git_srcs,ccan) \
 	$(call git_srcs,missing/ internal/ template/) \
 	$(call git_srcs,enc/) $(call git_srcs,win32/) \
-	$(call git_srcs,*.h)
+	$(call git_srcs,*.h) \
+	$(addprefix prism/,$(notdir $(patsubst %.erb,%,$(call git_srcs,'prism/templates/*.[ch].erb')))) \
+	$(empty)
 SRCS := $(wildcard $(SRCS))
+RBSRCS := $(call git_srcs,*.rb) \
+	$(patsubst prism/templates/%.erb,%,$(call git_srcs,'prism/templates/*.rb.erb')) \
+	$(empty)
   ifneq ($(if $(wildcard .git/svn),$(shell test -L .git/svn || echo .git/svn)),)
 VCS = $(GIT_SVN)
 VCSUP = $(VCS) rebase $(gitsvnup-options)
@@ -522,7 +527,7 @@ TAGS: $(SRCS)
 	sed 's/^ *# *define *//;/_H$$/d;y/(/+/' | sort -u && \
 	echo 'NORETURN+'; \
 	} > "$$tmp" && \
-	ctags -e -I@"$$tmp" --langmap=c:+.y.inc.def $(call git_srcs,'*.[chy]' '*.inc' '*.def')
+	ctags -e -I@"$$tmp" --langmap=c:+.y.ci.inc.def $(filter %.c %.h %.y %.ci %.inc %.def,$(SRCS))
 	@etags -a -lruby $(call git_srcs,*.rb)
 
 sudo-install:
