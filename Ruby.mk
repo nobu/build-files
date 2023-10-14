@@ -427,7 +427,7 @@ GIT_LOG_EXCLUDES = test/prism/snapshots/ test/yarp/snapshots/
 	@if git log -1 --format=%B FETCH_HEAD | grep -q -F '[ci skip]' || \
 	    git log -1 --format=%s FETCH_HEAD | grep -q '^\[DOC\]'; \
 	then \
-	    upstream=`git for-each-ref --format='%(upstream:short)' --points-at=FETCH_HEAD`; \
+	    upstream=`git for-each-ref --format='%(upstream:short)' --points-at=FETCH_HEAD | grep ^origin/`; \
 	    case "$$upstream" in \
 	    origin/*) git push all "$$upstream:$${upstream#origin/}"; \
 	    esac; \
