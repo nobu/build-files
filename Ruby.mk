@@ -106,7 +106,7 @@ else ifneq ($(and $(CVS),$(wildcard $(srcdir)/CVS/Entries)),)
 VCS = $(CVS)
 SRCS := $(call cvs_srcs) $(call cvs_srcs,missing/) $(call cvs_srcs,win32/)
 else
-SRCS := $(wildcard $(srcdir_prefix)*.h $(filter-out $(srcdir_prefix)parse.c,$(srcdir_prefix)*.c) $(srcdir_prefix)parse.y $(srcdir_prefix)missing/*.[ch] $(srcdir_prefix)win32/win32.[ch] $(srcdir_prefix)win32/dir.h)
+SRCS := $(wildcard $(srcdir_prefix)*.h $(filter-out $(srcdir_prefix)parse.c,$(srcdir_prefix)*.c) $(srcdir_prefix)parse.y $(srcdir_prefix)missing/*.[ch] $(srcdir_prefix)win32/win32.[ch] $(srcdir_prefix)win32/dir.h $(srcdir_prefix)prism/*.[ch] $(srcdir_prefix)prism/util/*.[ch])
 endif
 ifeq ($(if $(VCS),$(shell command -v $(firstword $(VCS)) 2>/dev/null),none),)
 VCS :=
