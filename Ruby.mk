@@ -72,6 +72,7 @@ SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
 	$(call git_srcs,enc/) $(call git_srcs,win32/) \
 	$(call git_srcs,*.h) \
 	$(addprefix prism/,$(notdir $(patsubst %.erb,%,$(call git_srcs,'prism/templates/*.[ch].erb')))) \
+	$(call git_srcs,prism/util/*.[ch]) \
 	$(empty)
 SRCS := $(wildcard $(SRCS))
 RBSRCS := $(call git_srcs,*.rb) \
