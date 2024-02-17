@@ -405,8 +405,8 @@ $(prereq-targets):
 	$(Q) $(RM) $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb
 endif
 
-PULL_REQUEST_HEADS = 'refs/remotes/github/pull/[1-9]???/head'
-GIT_LATEST_HEAD = git -C $(srcdir) for-each-ref --sort=-refname --format='%(refname:short)'
+PULL_REQUEST_HEADS = 'refs/remotes/github/pull/*/head'
+GIT_LATEST_HEAD = git -C $(srcdir) for-each-ref --sort=-version:refname --format='%(refname:short)'
 
 prev-head:
 	$(if $(filter git,$(VCS)),$(eval prev_head := $(shell git -C $(srcdir) log -1 --format=%H HEAD)))
