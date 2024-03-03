@@ -10,8 +10,8 @@ srcdir = src
 srcdir_prefix = src/
 Makefile.in = src/Makefile.in
 else
-srcdir = .
-srcdir_prefix =
+srcdir_prefix := $(dir $(wildcard src/ruby.c))
+srcdir := $(if $(srcdir_prefix),$(patsubst %/,%,$(srcdir_prefix)),.)
 Makefile.in = $(firstword $(wildcard template/Makefile.in Makefile.in))
 endif
 in-srcdir := $(if $(srcdir_prefix),cd $(srcdir) &&)
@@ -191,6 +191,9 @@ endif
 common.mk := $(wildcard $(srcdir_prefix)common.mk)
 ifeq ($(common.mk),)
 common.mk := $(wildcard defs/common.mk)
+endif
+ifeq ($(common.mk),)
+common.mk := $(wildcard common.mk)
 endif
 configure-default = $(Makefile.in) $(common.mk) $(subdir)/config.status
 submake = $(strip $(call $(if $(make-$(target)),make-$(target),make-default),$(@D)) $(CMDVARS))
