@@ -37,10 +37,10 @@ endif
 
 or = $(if $(1),$(1),$(2))
 
-CVS = $(if $(shell command -v cvs 2>&-),cvs -f)
-SVN = $(if $(shell command -v svn 2>&-),svn)
-GIT = $(if $(shell command -v git 2>&-),git)
-GIT_SVN = $(if $(GIT),$(GIT) -C $(srcdir) svn)
+CVS := $(if $(shell command -v cvs 2>&-),cvs -f)
+SVN := $(if $(shell command -v svn 2>&-),svn)
+GIT := $(if $(shell command -v git 2>&-),git)
+GIT_SVN := $(if $(GIT),$(GIT) -C $(srcdir) svn)
 svn-up = update
 svn-up-options = --accept postpone
 git-up = pull --no-edit --rebase
