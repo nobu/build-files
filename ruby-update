@@ -34,18 +34,24 @@ until [ $# = 0 ]; do
 done
 
 : ${dest=/opt/local}
-if [ ! -f "$src/.installed.list" ]; then
+if [ "$install" -a ! -f "$src/.installed.list" ]; then
     echo "$0: $src/.installed.list not found" 1>&2
     exit 1
 fi
 
 if [ -f "$dest/bin/ruby" -a -e "$dest/bin/ruby" ]; then
     archdir="$($dest/bin/ruby --disable=gems -rrbconfig -e 'puts RbConfig::CONFIG["rubyarchdir"]')"
-    tmp=$(mktemp)
-    trap 'rm -f "$tmp"' 0 2
-    mv "$archdir/.installed.list" "$tmp" || exit $?
-    $dest/bin/ruby --disable=gems ${0%/*}/rbuninstall.rb $dryrun --destdir="$dest" "$tmp"
-    rm -f "$tmp"
+    list="$archdir/.installed.list"
+    if [ ! ${dryrun:+set} ]; then
+	tmp=$(mktemp)
+	trap 'rm -f "$tmp"' 0 2
+	mv "$list" "$tmp" || exit $?
+	list="$tmp"
+    fi
+    $dest/bin/ruby --disable=gems ${0%/*}/rbuninstall.rb $dryrun --destdir="$dest" "$list"
+    if [ ! ${dryrun:+set} ]; then
+	rm -f "$tmp"
+    fi
     trap - 0 2
 fi
 
