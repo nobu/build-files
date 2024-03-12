@@ -36,6 +36,9 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfx$(nonexec) $(purge-opts) | \
 	sed 's!\(Would remove\|Removing\) !&$(@D)/!'
 
+%/.checkout.:
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f |& sed 's|^|$(@D): |'
+
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
 $(foreach op,$(ops),\
