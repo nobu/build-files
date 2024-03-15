@@ -28,13 +28,13 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 %/.update.: %/.master.
 	@$(GIT) -C $(@D) rebase | sed 's|^|$(@D): |'
 
-%/.no-purge.:
+%/.drypurge.:
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfxn $(purge-opts) | \
-	sed 's!\(Would remove\|Removing\) !&$(@D)/!'
+	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
 
 %/.purge.:
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfx$(nonexec) $(purge-opts) | \
-	sed 's!\(Would remove\|Removing\) !&$(@D)/!'
+	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
 
 %/.checkout.:
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f |& sed 's|^|$(@D): |'
@@ -44,5 +44,7 @@ ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 $(foreach op,$(ops),\
 $(eval $(value op): $$(addsuffix .$(value op).,$$(gem-srcdirs)))\
 )
+
+dry-purge: drypurge
 
 .PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(gem-srcdirs)))
