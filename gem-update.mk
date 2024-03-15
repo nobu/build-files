@@ -22,7 +22,7 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 %/.status.:
 	@$(GIT) -C $(@D) status --porcelain 2>&1 | sed 's|^|$(@D): |'
 
-%/.fetch.: .WAIT
+%/.fetch.:
 	@$(doing)
 	@$(GIT) -C $(@D) fetch 2>&1 | sed 's|^|$(@D): |'
 
@@ -46,10 +46,22 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
+max-sessions = 6
+ifeq ($(intcmp $(max-sessions),$(subst -j,,$(filter -j%,$(MFLAGS))),gt),gt)
+ops := $(filter-out fetch,$(ops))
+fetch: MFLAGS := $(filter-out -j% --jobserver-%,$(MFLAGS))
+fetch: MAKEFLAGS := $(filter-out -j% --jobserver-%,$(MAKEFLAGS))
+fetch:
+	@$(MAKE) -s $(MFLAGS) highlight='$(highlight)' reset='$(reset)' -j$(max-sessions) fetch
+
+#	@for dir in $(srcdirs); do echo $$'\e[93m'$$dir$$'\e[m'; $(GIT) -C $$dir fetch 2>&1 | sed "s|^|$$dir: |"; done
+endif
+
 $(foreach op,$(ops),\
 $(eval $(value op): $$(addsuffix .$(value op).,$$(srcdirs)))\
 )
 
 dry-purge: drypurge
+up: fetch .WAIT master .WAIT update
 
 .PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(srcdirs)))
