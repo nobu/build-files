@@ -11,6 +11,10 @@ $(if $(findstring p,$(mflags)),$(eval print-database := p))\
 $(if $(findstring k,$(mflags)),$(eval keep-going := k))\
 )
 
+highlight := $(subst 33,93,$(shell tput setaf 3))
+reset := $(subst 93,,$(highlight))
+doing = @echo $(highlight)$(@D)$(reset)
+
 srcdirs := $(dir $(wildcard */.git))
 
 master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short)' refs/heads/master refs/heads/main)
@@ -19,6 +23,7 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 	@$(GIT) -C $(@D) status --porcelain 2>&1 | sed 's|^|$(@D): |'
 
 %/.fetch.: .WAIT
+	@$(doing)
 	@$(GIT) -C $(@D) fetch 2>&1 | sed 's|^|$(@D): |'
 
 %/.master.:
