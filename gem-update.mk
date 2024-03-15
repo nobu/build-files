@@ -16,28 +16,28 @@ srcdirs := $(dir $(wildcard */.git))
 master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short)' refs/heads/master refs/heads/main)
 
 %/.status.:
-	@$(GIT) -C $(@D) status --porcelain | sed 's|^|$(@D): |'
+	@$(GIT) -C $(@D) status --porcelain 2>&1 | sed 's|^|$(@D): |'
 
 %/.fetch.: .WAIT
-	@$(GIT) -C $(@D) fetch | sed 's|^|$(@D): |'
+	@$(GIT) -C $(@D) fetch 2>&1 | sed 's|^|$(@D): |'
 
 %/.master.:
 	@$(GIT) -C $(@D) checkout $(call master,$(@D)) 2>&1 | \
 	sed '/^Your branch is up to date/d;/^Already on /d;s|^|$(@D): |'
 
 %/.update.: %/.master.
-	@$(GIT) -C $(@D) rebase | sed 's|^|$(@D): |'
+	@$(GIT) -C $(@D) rebase 2>&1 | sed '/ up to date\.$$/d;s|^|$(@D): |'
 
 %/.drypurge.:
-	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfxn $(purge-opts) | \
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfxn $(purge-opts) 2>&1 | \
 	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
 
 %/.purge.:
-	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfx$(nonexec) $(purge-opts) | \
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfx$(nonexec) $(purge-opts) 2>&1 | \
 	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
 
 %/.checkout.:
-	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f |& sed 's|^|$(@D): |'
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f 2>&1 | sed 's|^|$(@D): |'
 
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
