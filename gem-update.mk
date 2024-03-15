@@ -11,7 +11,7 @@ $(if $(findstring p,$(mflags)),$(eval print-database := p))\
 $(if $(findstring k,$(mflags)),$(eval keep-going := k))\
 )
 
-gem-srcdirs := $(dir $(wildcard */.git))
+srcdirs := $(dir $(wildcard */.git))
 
 master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short)' refs/heads/master refs/heads/main)
 
@@ -42,9 +42,9 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
 $(foreach op,$(ops),\
-$(eval $(value op): $$(addsuffix .$(value op).,$$(gem-srcdirs)))\
+$(eval $(value op): $$(addsuffix .$(value op).,$$(srcdirs)))\
 )
 
 dry-purge: drypurge
 
-.PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(gem-srcdirs)))
+.PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(srcdirs)))
