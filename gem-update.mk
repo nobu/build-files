@@ -13,30 +13,30 @@ $(if $(findstring k,$(mflags)),$(eval keep-going := k))\
 
 highlight := $(subst 33,93,$(shell tput setaf 3))
 reset := $(subst 93,,$(highlight))
-doing = @echo $(highlight)$(@D)$(reset)
+target-dir = $(highlight)$(@D)$(reset)
 
 srcdirs := $(dir $(wildcard */.git))
 
 master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short)' refs/heads/master refs/heads/main)
 
 %/.status.:
-	@$(GIT) -C $(@D) status --porcelain 2>&1 | sed 's|^|$(@D): |'
+	@$(GIT) -C $(@D) status --porcelain 2>&1 | sed 's|^|$(target-dir): |'
 
 %/.fetch.:
-	@$(doing)
-	@$(GIT) -C $(@D) fetch 2>&1 | sed 's|^|$(@D): |'
+	@$(GIT) -C $(@D) fetch 2>&1 | sed 's|^|$(target-dir): |'
 
 %/.master.:
 	@$(GIT) -C $(@D) checkout $(call master,$(@D)) 2>&1 | \
-	sed '/^Your branch is up to date/d;/^Already on /d;s|^|$(@D): |'
+	sed '/^Your branch is up to date/d;/^Already on /d;s|^|$(target-dir): |'
 
 %/.update.: %/.master.
-	@$(GIT) -C $(@D) rebase 2>&1 | sed '/ up to date\.$$/d;s|^|$(@D): |'
+	@$(GIT) -C $(@D) rebase 2>&1 | sed '/ up to date\.$$/d;s|^|$(target-dir): |'
 
 %/.reset.: %/.master.
-	@$(GIT) -C $(@D) reset --hard 2>&1 | sed 's|^|$(@D): |'
+	@$(GIT) -C $(@D) reset --hard 2>&1 | sed 's|^|$(target-dir): |'
 
 %/.drypurge.:
+	@echo $(target-dir)
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfxn $(purge-opts) 2>&1 | \
 	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
 
@@ -45,7 +45,7 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
 
 %/.checkout.:
-	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f 2>&1 | sed 's|^|$(@D): |'
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f 2>&1 | sed 's|^|$(target-dir): |'
 
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
