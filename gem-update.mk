@@ -33,6 +33,9 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 %/.update.: %/.master.
 	@$(GIT) -C $(@D) rebase 2>&1 | sed '/ up to date\.$$/d;s|^|$(@D): |'
 
+%/.reset.: %/.master.
+	@$(GIT) -C $(@D) reset --hard 2>&1 | sed 's|^|$(@D): |'
+
 %/.drypurge.:
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) clean -dfxn $(purge-opts) 2>&1 | \
 	sed 's!^\(Would remove\|Removing\) !&$(@D)/!'
