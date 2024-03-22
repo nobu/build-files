@@ -442,6 +442,7 @@ GIT_LOG_EXCLUDES = test/prism/ test/yarp/
 	$(if $(filter $(srcdir_prefix)revision.h,$(prereq-targets)),,-@$(RM) $(srcdir_prefix)revision.h)
 	@ rm -f $(srcdir_prefix)ChangeLog.orig $(srcdir_prefix)changelog.tmp
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse \
+		--perl-regexp --author='^(?!dependabot)' \
 		$(prev_head)..HEAD -- $(addprefix ':(exclude)',$(GIT_LOG_EXCLUDES)))
 	$(call new-pr,$(last_pr)..)
 
