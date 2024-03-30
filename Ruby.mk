@@ -231,7 +231,7 @@ NATIVEARCH := $(patsubst %/Makefile,%,$(shell grep -l '^PREP *= *miniruby' $(sub
 DEFAULTARCH := $(word 1, $(filter $(ARCH) .$(ARCH),$(NATIVEARCH)) $(NATIVEARCH))
 MINIRUBY := $(DEFAULTARCH)/miniruby
 ORIG_RUBYLIB := $(RUBYLIB)
-export BASERUBY ?= ruby$(shell sed '/^# *BASERUBY must be >= /!d;s///;s/ .*//;s/\.$$//;s/\.0$$//;q' $(CONFIGURE_IN))
+export BASERUBY ?= ruby$(shell sed '/.* BASERUBY must be[^0-9.]*/!d;s///;s/ .*//;s/\.$$//;s/\.0$$//;q' $(CONFIGURE_IN) $(wildcard tool/missing-baseruby.bat))
 export RUBYLIB = .$(if $(EXTOUT),:$(EXTOUT)/common:$(EXTOUT)/$(DEFAULTARCH)):$(PWD)/lib
 export RUBY := $(if $(BASERUBY),$(BASERUBY),$(if $(patsubst /%,,$(MINIRUBY)),$(PWD)/$(MINIRUBY) -I $(RUBYLIB),$(MINIRUBY)))
 endif
