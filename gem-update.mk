@@ -66,5 +66,6 @@ $(eval $(value op): $$(addsuffix .$(value op).,$$(srcdirs)))\
 
 dry-purge: drypurge
 up: fetch .WAIT master .WAIT update
+st: status
 
 .PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(srcdirs)))
