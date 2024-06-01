@@ -47,6 +47,9 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 %/.checkout.:
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f 2>&1 | sed 's|^|$(target-dir): |'
 
+%/.diff.:
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) diff --src-prefix=a/$(@D)/ --dst-prefix=b/$(@D)/
+
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
 max-sessions = 6
