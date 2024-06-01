@@ -304,7 +304,8 @@ $(1)/%: prereq .force
 $(1)/inst: .force
 	@{ \
 	  echo include GNUmakefile; \
-	  echo 'install-everything: clean-docs install; $$$$(CP) $$$$(INSTALLED_LIST) $$$$(DESTDIR)/'; \
+	  echo 'install-everything: clean-docs .WAIT install'; \
+	  echo '	$$$$(CP) $$$$(INSTALLED_LIST) $$$$(DESTDIR)/'; \
 	  echo 'install: clean-destdir'; \
 	  echo 'clean-destdir:; -$$$$(Q) $$$$(RMALL) $$$$(DESTDIR)/'; \
 	} | \
