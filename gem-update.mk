@@ -1,5 +1,5 @@
 #!/bin/sh
-_=; exec ${MAKE-make} -s -C "${0%/*}" -f "${0##*/}" "$@"
+_=; exec ${MAKE-make} -s -C "${0%/*}" -f "${0##*/}" "$@" || exit
 
 GIT := $(if $(shell command -v git 2>&-),git)
 nonexec :=
