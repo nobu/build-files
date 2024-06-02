@@ -310,6 +310,9 @@ $(1)/inst: .force
 	  echo 'clean-destdir:; -$$$$(Q) $$$$(RMALL) $$$$(DESTDIR)/'; \
 	} | \
 	$$(MAKE) -C $$(@D) -f - prereq-targets= install-everything INSTRUBY_OPTS='--install=dbg --debug-symbols=dSYM'
+
+$(1)/nightly: yesterday $(DOT_WAIT) $(1)/inst
+	@:
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
@@ -622,3 +625,8 @@ ChangeLog:
 	-$(Q) $(BASERUBY) -Itool/lib -rvcs \
 	-e 'VCS.detect(ARGV[0]).export_changelog("@", nil, nil, ARGV[1])' \
 	. $@
+
+yesterday:
+	git status --porcelain
+	git diff --quiet
+	git reset --hard `git log -1 --before=00:00:00 --format=%H`
