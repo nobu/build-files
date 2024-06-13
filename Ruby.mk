@@ -313,6 +313,9 @@ $(1)/inst: .force
 
 $(1)/nightly: yesterday $(DOT_WAIT) $(1)/inst
 	@:
+
+$(1)/outdate-bundled-gems:
+	$(MAKE) -C $$(@D) $$(@F)
 endef
 $(foreach subdir,$(subdirs),$(eval $(call subdircmd,$(subdir))))
 
@@ -572,6 +575,8 @@ pre-install-local: $(subdirs:=/pre-install-local)
 post-install-local: $(subdirs:=/post-install-local)
 pre-install-ext: $(subdirs:=/pre-install-ext)
 post-install-ext: $(subdirs:=/post-install-ext)
+
+outdate-bundled-gems: $(subdirs:=/outdate-bundled-gems)
 
 reset:
 	$(VCSRESET)
