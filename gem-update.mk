@@ -67,8 +67,9 @@ $(foreach op,$(ops),\
 $(eval $(value op): $$(addsuffix .$(value op).,$$(srcdirs)))\
 )
 
+.NOTPARALLEL: up
 dry-purge: drypurge
-up: fetch .WAIT master .WAIT update
+up: master fetch update
 st: status
 
 .PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(srcdirs)))
