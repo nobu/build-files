@@ -23,7 +23,7 @@ define svn_srcs
 $(subst .svn/text-base/,,$(patsubst %.svn-base,%,$(wildcard $(filter-out ./,$(dir $(srcdir_prefix)$(1))).svn/text-base/$(call or,$(notdir $(1)),*.[chy]).svn-base)))
 endef
 define git_srcs
-$(shell $(in-srcdir) $(GIT) ls-files $(1) $(2) $(3) | grep -v -e '^ext/' -e '^test/' -e '^spec/')
+$(shell $(in-srcdir) $(GIT) ls-files $(1) $(2) $(3) ':^ext/' ':^test/'  ':^spec/')
 endef
 
 V = 0
@@ -65,12 +65,11 @@ UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
 
-SRCS := $(call git_srcs,include/ruby/) $(call git_srcs,*.[cy]) \
-	$(call git_srcs,*.ci *.inc) \
-	$(call git_srcs,*.def) $(call git_srcs,ccan) \
+SRCS := $(call git_srcs,include/ruby/ *.[chy]) \
+	$(call git_srcs,*.ci *.inc *.def) \
 	$(call git_srcs,missing/ internal/ template/) \
-	$(call git_srcs,enc/) $(call git_srcs,win32/) \
-	$(call git_srcs,*.h) \
+	$(call git_srcs,enc/ ccan/ win32/) \
+	$(wildcard id.c id.h ext/ripper/ripper_init.c) \
 	$(addprefix prism/,$(notdir $(patsubst %.erb,%,$(call git_srcs,'prism/templates/*.[ch].erb')))) \
 	$(call git_srcs,prism/util/*.[ch]) \
 	$(empty)
@@ -539,7 +538,8 @@ TAGS: $(SRCS)
 	sed 's/^ *# *define *//;/_H$$/d;y/(/+/' | sort -u && \
 	echo 'NORETURN+'; \
 	} > "$$tmp" && \
-	ctags -e -I@"$$tmp" --langmap=c:+.y.ci.inc.def $(filter %.c %.h %.y %.ci %.inc %.def,$(SRCS))
+	ctags -e -I@"$$tmp" --langmap=c:+.ci.inc.def $(filter %.c %.h %.ci %.inc %.def,$(SRCS))
+	tmp=`mktemp`; trap 'rm $$tmp' 0 2; sed 's:^%[{}]:/*&*/:' parse.y > "$$tmp" && etags -a -lc --parse-stdin=parse.y < "$$tmp"
 	@etags -a -lruby $(call git_srcs,*.rb)
 
 sudo-install:
