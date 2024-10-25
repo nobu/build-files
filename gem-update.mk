@@ -33,7 +33,7 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 	@$(GIT) -C $(@D) rebase 2>&1 | sed '/ up to date\.$$/d;s|^|$(target-dir): |'
 
 %/.reset.: %/.master.
-	@$(GIT) -C $(@D) reset --hard 2>&1 | sed 's|^|$(target-dir): |'
+	@$(GIT) -C $(@D) reset --hard 2>&1 | sed '/^HEAD is now at/d;s|^|$(target-dir): |'
 
 %/.drypurge.:
 	@echo $(target-dir)
