@@ -19,10 +19,13 @@ srcdirs := $(dir $(wildcard */.git))
 
 master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short)' refs/heads/master refs/heads/main)
 
+random_wait = sleep 0.$$RANDOM
+
 %/.status.:
 	@$(GIT) -C $(@D) status --porcelain 2>&1 | sed 's|^|$(target-dir): |'
 
 %/.fetch.:
+	$(random_wait)
 	@$(GIT) -C $(@D) fetch 2>&1 | sed 's|^|$(target-dir): |'
 
 %/.master.:
@@ -52,7 +55,7 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
 
-max-sessions = 6
+max-sessions = 4
 ifeq ($(intcmp $(max-sessions),$(subst -j,,$(filter -j%,$(MFLAGS))),gt),gt)
 ops := $(filter-out fetch,$(ops))
 fetch: MFLAGS := $(filter-out -j% --jobserver-%,$(MFLAGS))
