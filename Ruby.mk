@@ -65,13 +65,16 @@ UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
 
+ls-files = $(in-srcdir) $(GIT) ls-files
+prism_srcs := $(shell $(ls-files) prism/**/*.[ch]) \
+	$(patsubst %.erb,prism/%,$(notdir $(shell $(ls-files) prism/templates/*.[ch].erb)))
+
 SRCS := $(call git_srcs,include/ruby/ *.[chy]) \
 	$(call git_srcs,*.ci *.inc *.def) \
 	$(call git_srcs,missing/ internal/ template/) \
 	$(call git_srcs,enc/ ccan/ win32/) \
 	$(wildcard id.c id.h ext/ripper/ripper_init.c) \
-	$(addprefix prism/,$(notdir $(patsubst %.erb,%,$(call git_srcs,'prism/templates/*.[ch].erb')))) \
-	$(call git_srcs,prism/util/*.[ch]) \
+	$(prism_srcs) \
 	$(empty)
 SRCS := $(wildcard $(SRCS))
 RBSRCS := $(call git_srcs,*.rb) \
