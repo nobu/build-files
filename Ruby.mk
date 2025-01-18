@@ -499,13 +499,8 @@ revision.h: .force
 
 #ifeq ($(filter $(srcdir_prefix)revision.h,$(prereq-targets)),)
 $(srcdir_prefix)revision.h:
-	@{ RUBYLIB="$ORIG_RUBYLIB" LC_MESSAGES=C $(UPDATE_REVISION); } > "$@.tmp"
-	@if test -f "$@" -a -s "$@.tmp" && diff -u "$@" "$@.tmp" > /dev/null 2>&1; then \
-	    rm -f "$@.tmp"; \
-	else \
-	    mv -f "$@.tmp" "$@"; \
-	fi
-	touch .revision.time
+	@{ RUBYLIB="$ORIG_RUBYLIB" LC_MESSAGES=C $(UPDATE_REVISION); } | \
+	tool/ifchange --timestamp=.revision.time --empty "$@" -
 #	@! fgrep revision.h version.h > /dev/null || $(BASERUBY) tool/revup.rb
 #endif
 
