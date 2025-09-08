@@ -1,0 +1,66 @@
+#!/usr/bin/ruby
+require 'fileutils'
+
+rbconfig = Module.new do
+  module_eval(File.read("rbconfig.rb").sub(/^ *\K(?=RUBY_VERSION\.start_with\?)/, 'true or '), "rbconfig.rb")
+end::RbConfig
+prefix = rbconfig::CONFIG["prefix"] + "/"
+bindir = rbconfig::CONFIG["bindir"]
+mandir = rbconfig::CONFIG["mandir"]
+ruby_install_name = rbconfig::CONFIG["ruby_install_name"]
+if trans = rbconfig::CONFIG["program_transform_name"]
+  exp = []
+  trans.gsub!(/\$\$/, '$')
+  trans.scan(%r[\G[\s;]*(/(?:\\.|[^/])*+/)?([sy])(\\?\W)((?:(?!\3)(?:\\.|.))*+)\3((?:(?!\3)(?:\\.|.))*+)\3([gi]*)]) do
+    |addr, cmd, sep, pat, rep, opt|
+    addr &&= Regexp.new(addr[/\A\/(.*)\/\z/, 1])
+    case cmd
+    when 's'
+      next if pat == '^' and rep.empty?
+      exp << [addr, (opt.include?('g') ? :gsub! : :sub!),
+              Regexp.new(pat, opt.include?('i')), rep.gsub(/&/){'\&'}]
+    when 'y'
+      exp << [addr, :tr!, Regexp.quote(pat), rep]
+    end
+  end
+  trans = proc do |base|
+    exp.each {|addr, opt, pat, rep| base.__send__(opt, pat, rep) if !addr or addr =~ base}
+    base
+  end
+elsif /ruby/ =~ ruby_install_name
+  trans = proc {|base| ruby_install_name.sub(/ruby/, base)}
+else
+  trans = proc {|base| base}
+end
+
+port_root = ENV["PATH"].split(File::PATH_SEPARATOR).find do |path|
+  File.executable?(File.join(path, "port")) and break path.chomp("/bin")
+end + "/"
+base = %x(#{port_root}bin/port content ruby_select)[/^ *\K.*\/base$/]
+base.start_with?(port_root) or abort "#{base} is not under #{port_root}"
+Dir.chdir(ARGV[0])
+dir = File.dirname(base[port_root.size..-1])
+new = File.join(dir, rbconfig.expand("ruby$(MAJOR)$(MINOR)"))
+FileUtils.mkdir_p(dir)
+puts new
+File.open(new, "w") do |out|
+  File.foreach(base) do |line|
+    line.chomp!
+    case line
+    when %r[\Abin/(.+)]
+      file = File.join(bindir, trans[$1])
+    when %r[\Ashare/man/(man(\d))/(.+)(\.\2\.gz)\z]
+      section, name, suffix = $1, $3, $4
+      file = File.join(mandir, section, trans[name] + suffix)
+    end
+    if file
+      rbconfig.expand(file)
+      unless file.start_with?(prefix) and
+            File.exist?(file = file[prefix.size..-1])
+        file = nil
+      end
+    end
+    file ||= "-"
+    out.puts file
+  end
+end

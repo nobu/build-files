@@ -306,10 +306,14 @@ $(1)/%: prereq .force
 	+$$(submake) TOPMAKE=$(value TOPMAKE) $$(mflags) $$(@F)
 
 $(1)/inst: .force
+	$(eval miscdir := $(dir $(shell readlink GNUmakefile)))
+	$(eval make_select_list := $(miscdir)make_select_list)
+	$(if $(patsubst /%,,$(make_select_list)),$(eval make_select_list := $$$$(srcdir)/$(make_select_list)))
 	@{ \
 	  echo include GNUmakefile; \
 	  echo 'install-everything: clean-docs .WAIT install'; \
 	  echo '	$$$$(CP) $$$$(INSTALLED_LIST) $$$$(DESTDIR)/'; \
+	  echo '	$$(make_select_list) $$$$(DESTDIR)/ >> $$$$(DESTDIR)/.installed.list'; \
 	  echo 'install: clean-destdir'; \
 	  echo 'clean-destdir:; -$$$$(Q) $$$$(RMALL) $$$$(DESTDIR)/'; \
 	} | \
