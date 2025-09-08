@@ -65,6 +65,7 @@ UPDATE_PREREQ_LOCAL := update-prereq-local
 UPDATE_PREREQ := update-prereq
 endif
 
+git-log-format = log --no-show-signature --format=$(1)
 ls-files = $(in-srcdir) $(GIT) ls-files
 prism_srcs := $(shell $(ls-files) prism/**/*.[ch]) \
 	$(patsubst %.erb,prism/%,$(notdir $(shell $(ls-files) prism/templates/*.[ch].erb)))
@@ -422,7 +423,8 @@ PULL_REQUEST_HEADS = 'refs/remotes/github/pull/*/head'
 GIT_LATEST_HEAD = git -C $(srcdir) for-each-ref --sort=-version:refname --format='%(refname:short)'
 
 prev-head:
-	$(if $(filter git,$(VCS)),$(eval prev_head := $(shell git -C $(srcdir) log -1 --format=%H HEAD)))
+	$(if $(filter git,$(VCS)),\
+	$(eval prev_head := $(shell git -C $(srcdir) $(call git-log-format,%H) -1 HEAD)))
 	$(if $(prev_head),@ echo HEAD = $(prev_head))
 
 latest-pr = $(patsubst github/pull/%/head,%,$(shell $(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS)))
@@ -438,8 +440,8 @@ GIT_LOG_EXCLUDES = test/prism/ test/yarp/
 
 .do-up: $(before-up) prev-head last-pr
 	$(call or,$(in-srcdir),env) LC_TIME=C $(VCSUP)
-	@if git log -1 --format=%B FETCH_HEAD | grep -q -F '[ci skip]' || \
-	    git log -1 --format=%s FETCH_HEAD | grep -q '^\[DOC\]'; \
+	@if git $(call git-log-format,%B) -1 FETCH_HEAD | grep -q -F '[ci skip]' || \
+	    git $(call git-log-format,%s) -1 FETCH_HEAD | grep -q '^\[DOC\]'; \
 	then \
 	    upstream=`git for-each-ref --format='%(upstream:short)' --points-at=FETCH_HEAD | grep ^origin/`; \
 	    case "$$upstream" in \
@@ -633,4 +635,4 @@ ChangeLog:
 yesterday:
 	git status --porcelain
 	git diff --quiet
-	git reset --hard `git log -1 --before=00:00:00 --format=%H`
+	git reset --hard `git $(call git-log-format,%H) -1 --before=00:00:00`
