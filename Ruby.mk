@@ -309,6 +309,7 @@ $(1)/inst: .force
 	$(eval miscdir := $(dir $(shell readlink GNUmakefile)))
 	$(eval make_select_list := $(miscdir)make_select_list)
 	$(if $(patsubst /%,,$(make_select_list)),$(eval make_select_list := $$$$(srcdir)/$(make_select_list)))
+	rm .revision.time
 	@{ \
 	  echo include GNUmakefile; \
 	  echo 'install-everything: clean-docs .WAIT install'; \
