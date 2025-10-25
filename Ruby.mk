@@ -461,7 +461,8 @@ GIT_LOG_EXCLUDES = test/prism/ test/yarp/
 	$(if $(if $(filter git,$(VCS)),$(prev_head)),git -C $(srcdir) log -p --reverse \
 		--irreversible-delete --perl-regexp --author='^(?!dependabot)' \
 		$(prev_head)..HEAD -- $(addprefix ':(exclude)',$(GIT_LOG_EXCLUDES)))
-	$(call new-pr,$(last_pr)..)
+	new_pr=$$($(GIT_LATEST_HEAD) --count=1 $(PULL_REQUEST_HEADS) | cut -d/ -f3); \
+	$(call new-pr,$(last_pr)..$${new_pr})
 
 new-pr:
 	$(call new-pr,$(call or,$(PR),$(call latest-pr)))
