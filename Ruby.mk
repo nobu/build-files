@@ -642,4 +642,4 @@ ChangeLog:
 yesterday:
 	git status --porcelain
 	git diff --quiet
-	git reset --hard `git $(call git-log-format,%H) -1 --before=00:00:00`
+	git reset --hard `TZ=UTC-9 git $(call git-log-format,%H) -1 --before=00:00`
