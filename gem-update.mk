@@ -48,28 +48,24 @@ master = $(shell $(GIT) -C $(1) for-each-ref --count=1 '--format=%(refname:short
 	@MAKE='$(MAKE)' $(GIT) -C $(@D) checkout -f 2>&1 | sed 's|^|$(target-dir): |'
 
 %/.diff.:
-	@MAKE='$(MAKE)' $(GIT) -C $(@D) diff --src-prefix=a/$(@D)/ --dst-prefix=b/$(@D)/
+	@MAKE='$(MAKE)' $(GIT) -C $(@D) diff --color --src-prefix=a/$(@D)/ --dst-prefix=b/$(@D)/
 
 ops := $(shell sed -n 's|^%/\.\(.*\)\.:.*|\1|p' $(MAKEFILE_LIST))
-
-max-sessions = 6
-ifeq ($(intcmp $(max-sessions),$(subst -j,,$(filter -j%,$(MFLAGS))),gt),gt)
 ops := $(filter-out fetch,$(ops))
-fetch: MFLAGS := $(filter-out -j% --jobserver-%,$(MFLAGS))
-fetch: MAKEFLAGS := $(filter-out -j% --jobserver-%,$(MAKEFLAGS))
-fetch:
-	@$(MAKE) -s $(MFLAGS) highlight='$(highlight)' reset='$(reset)' -j$(max-sessions) fetch
-
-#	@for dir in $(srcdirs); do echo $$'\e[93m'$$dir$$'\e[m'; $(GIT) -C $$dir fetch 2>&1 | sed "s|^|$$dir: |"; done
-endif
 
 $(foreach op,$(ops),\
 $(eval $(value op): $$(addsuffix .$(value op).,$$(srcdirs)))\
 )
 
+fetch:
+	./fetch-all --target-prefix='$(highlight)' --target-suffix='$(reset)'
+
+diff :
 .NOTPARALLEL: up
 dry-purge: drypurge
 up: master fetch update
 st: status
+sync: up
+	$(wildcard ../sync.*)
 
 .PHONEY: $(foreach op,$(ops),$(addsuffix .$(op).,$(srcdirs)))

@@ -1,0 +1,69 @@
+#!/opt/local/bin/bash
+
+dryrun=
+quiet=
+maxjobs=8
+wait=0.1
+prefix=
+suffix=
+while getopts nqjw-: opt; do
+    optarg="$OPTARG"
+    if [[ "$opt" = - ]]; then
+	opt="${OPTARG%%=*}"
+	if [[ "${opt}" = "${OPTARG}" ]]; then
+	    optarg="${!OPTIND}"
+	    shift
+	else
+	    optarg="${OPTARG#*=}"
+	fi
+    fi
+
+    case $opt in
+	n|dry-run|dry) dryrun=true;;
+	q|quiet) quiet=true;;
+	j|jobs)
+	    if maxjobs=$(bc -z -e "${optarg}" 2>/dev/null) && (($maxjobs > 0)); then
+		echo "$0: invalid max jobs: $optarg" 1>&2
+		exit 1
+	    fi ;;
+	w|wait)
+	    if wait=$(bc -z -e "${optarg}" 2>/dev/null) && (($wait > 0)); then
+		echo "$0: invalid wait interval: $optarg" 1>&2
+		exit 1
+	    fi ;;
+	target-prefix) prefix=$optarg;;
+	target-suffix) suffix=$optarg;;
+	--) break;;
+	*) exit 1;;
+    esac
+done
+(($OPTIND > 1)) && shift $((OPTIND - 1))
+
+cd ${0%/*} || exit
+if (($# == 0)); then
+   set -- $(grep -l ^gitdir: */.git 2>/dev/null | sed 's|/\.git$||')
+fi
+jobs=1
+sleep=
+while (($# > 0)); do
+    if (($jobs > 0)); then
+	: jobs=$jobs "${@:1:${jobs}}"
+	for dir in "${@:1:${jobs}}"; do
+	    : $1 $dir
+	    shift
+	    ${quiet:-echo Start fetching ${dir}}
+	    [ "${dryrun}" ] || { git -C "${dir}" fetch 2>&1 | sed "s|^|${prefix}${dir}${suffix}: |" & }
+	    ${sleep:+sleep $wait}
+	    sleep=1
+	done
+    fi
+    while wait -n -f; do
+	jobs=($(jobs -p))
+	jobs=${#jobs[@]}
+	if (($maxjobs > $jobs)); then
+	    jobs=$((maxjobs - jobs))
+	    break
+	fi
+    done
+done
+wait
