@@ -340,6 +340,16 @@ $(foreach goal,$(phony-targets) $(filter-out $(prereq-filter),$(MAKECMDGOALS)),$
 $(foreach goal,$(phony-targets) $(filter-out $(subdirs:=/%) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): .pre-$(value goal)))
 $(foreach goal,$(phony-targets) $(filter-out $(subdir-filter) $(phony-filter),$(MAKECMDGOALS)),$(eval $(value goal): $$(subdirs:=/$(value goal))))
 $(foreach goal,$(sort $(phony-targets) $(filter-out $(phony-filter),$(cmdgoals))),$(eval $(value goal):\; $$(call FINISHED,$(value goal))))
+ifeq ($(shell grep ^DUMP_AST $(Makefile.in)),)
+else ifneq ($(shell command -v dump_ast),)
+dump_ast := dump_ast
+else ifneq ($(DEFAULTARCH),)
+dump_ast := $(shell cd $(DEFAULTARCH); echo $$(pwd)/dump_ast)
+else ifneq ($(RUBY_DUMP_AST),)
+dump_ast := $(RUBY_DUMP_AST)
+else
+dump_ast := no_dump_ast
+endif
 
 none:
 .PHONY: none
@@ -421,6 +431,7 @@ $(prereq-targets):
 	PATH_SEPARATOR=: CROSS_COMPILING=no ECHO=$(ECHO) Q=$(Q) MAJOR=$(MAJOR) MINOR=$(MINOR) \
 	DOT_WAIT=$(DOT_WAIT) CONFIGURE=configure -orevision.h \
 	$(filter-out prereq,$(patsubst .do-%,%,$@)) \
+	DUMP_AST=$(dump_ast) DUMP_AST_TARGET=$(empty) \
 	$(if $(filter-out $(srcdir_prefix)revision.h,$@),$(srcdir_prefix).revision.time prereq)
 	$(Q) $(RM) $(srcdir)/.top-enc.mk $(srcdir)/noarch-fake.rb
 endif
